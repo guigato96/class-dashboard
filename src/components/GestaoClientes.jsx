@@ -13,17 +13,6 @@ function parseDate(str) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-function addDays(date, days) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
-
-function fmtDate(date) {
-  if (!date) return "—";
-  return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
 function diffDays(a, b) {
   return Math.round((a.getTime() - b.getTime()) / 86400000);
 }
@@ -88,8 +77,6 @@ function buildPayload(c) {
 }
 
 function computeDerived(c, hoje) {
-  const ultimaReuniao = parseDate(c.data_ultima_reuniao);
-  const proximaReuniao = ultimaReuniao ? addDays(ultimaReuniao, 30) : null;
   const renovacao = parseDate(c.data_proxima_renovacao);
   const diasRenovacao = renovacao ? diffDays(renovacao, hoje) : null;
 
@@ -104,7 +91,7 @@ function computeDerived(c, hoje) {
   if (pagamentoRuim || saudeRuim || renovacaoUrgente) nivel = "alto";
   else if (pagamentoAtencao || renovacaoProxima) nivel = "medio";
 
-  return { proximaReuniao, diasRenovacao, nivel };
+  return { diasRenovacao, nivel };
 }
 
 const RISCO_STYLE = {
@@ -507,6 +494,10 @@ export default function GestaoClientes() {
     const lista = [...filtrados];
     if (ordenacao === "nome") return lista.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
     if (ordenacao === "valor") return lista.sort((a, b) => (Number(b.valor_mensal) || 0) - (Number(a.valor_mensal) || 0));
+    if (ordenacao === "pagamento") {
+      const pesoPag = { atrasado: 0, pendente: 1, pago: 2 };
+      return lista.sort((a, b) => pesoPag[a.status_pagamento_mes] - pesoPag[b.status_pagamento_mes]);
+    }
     if (ordenacao === "renovacao") {
       return lista.sort((a, b) => {
         if (a._d.diasRenovacao === null) return 1;
@@ -601,6 +592,7 @@ export default function GestaoClientes() {
           <option value="risco" style={{ backgroundColor: "#141417" }}>Ordenar: Risco</option>
           <option value="nome" style={{ backgroundColor: "#141417" }}>Ordenar: Nome</option>
           <option value="valor" style={{ backgroundColor: "#141417" }}>Ordenar: Valor mensal</option>
+          <option value="pagamento" style={{ backgroundColor: "#141417" }}>Ordenar: Pagamento</option>
           <option value="renovacao" style={{ backgroundColor: "#141417" }}>Ordenar: Renovação</option>
         </select>
       </div>
@@ -644,15 +636,6 @@ export default function GestaoClientes() {
                     <div className="text-xs" style={{ color: "#8B8B93" }}>{c.nicho || "Nicho não definido"} · {fmtMoney(c.valor_mensal)}/mês</div>
                   </div>
                   <Badge color={SAUDE_COLOR[c.status_saude]}>{SAUDE_LABEL[c.status_saude]}</Badge>
-                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                    <Badge color={PAG_COLOR[c.status_pagamento_mes]}>{PAG_LABEL[c.status_pagamento_mes]}</Badge>
-                    <PaymentSwitch
-                      checked={c.status_pagamento_mes === "pago"}
-                      onChange={() => alternarPagamento(c)}
-                      disabled={salvando}
-                      title={c.status_pagamento_mes === "pago" ? "Marcar como pendente" : "Marcar como pago"}
-                    />
-                  </div>
                   {c._d.diasRenovacao !== null && c._d.diasRenovacao <= 30 && (
                     <Badge color="#EAB308">Renova em {c._d.diasRenovacao}d</Badge>
                   )}
@@ -663,9 +646,15 @@ export default function GestaoClientes() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="hidden md:block text-xs" style={{ color: "#8B8B93" }}>
-                    Próx. reunião: {fmtDate(c._d.proximaReuniao)}
-                  </span>
+                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <Badge color={PAG_COLOR[c.status_pagamento_mes]}>{PAG_LABEL[c.status_pagamento_mes]}</Badge>
+                    <PaymentSwitch
+                      checked={c.status_pagamento_mes === "pago"}
+                      onChange={() => alternarPagamento(c)}
+                      disabled={salvando}
+                      title={c.status_pagamento_mes === "pago" ? "Marcar como pendente" : "Marcar como pago"}
+                    />
+                  </div>
                   {aberto ? <ChevronUp size={18} color="#8B8B93" /> : <ChevronDown size={18} color="#8B8B93" />}
                 </div>
               </div>

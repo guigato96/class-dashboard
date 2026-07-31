@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Plus, ChevronDown, ChevronUp, Users, TrendingUp, TrendingDown, Minus, AlertTriangle, Calendar, DollarSign, Trash2, Save, Search } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, mesAtualLabel } from "../lib/mes";
+import PaymentSwitch from "./PaymentSwitch";
 
 const PURPLE = "#8B5CF6";
 const PURPLE_LIGHT = "#C4B5FD";
@@ -125,24 +126,6 @@ function Badge({ color, children }) {
     >
       {children}
     </span>
-  );
-}
-
-function PaymentSwitch({ checked, onChange, disabled }) {
-  return (
-    <button
-      type="button"
-      onClick={(e) => { e.stopPropagation(); onChange(); }}
-      disabled={disabled}
-      title={checked ? "Marcar como pendente" : "Marcar como pago"}
-      className="relative inline-flex items-center shrink-0 rounded-full transition-colors duration-300 ease-in-out disabled:opacity-50 active:scale-95"
-      style={{ width: 34, height: 20, backgroundColor: checked ? "#22C55E" : "#3A3A3F", transitionProperty: "background-color, transform" }}
-    >
-      <span
-        className="inline-block rounded-full bg-white transition-transform duration-300 ease-in-out"
-        style={{ width: 16, height: 16, transform: checked ? "translateX(16px)" : "translateX(2px)", boxShadow: "0 1px 3px rgba(0,0,0,0.4)" }}
-      />
-    </button>
   );
 }
 
@@ -663,7 +646,12 @@ export default function GestaoClientes() {
                   <Badge color={SAUDE_COLOR[c.status_saude]}>{SAUDE_LABEL[c.status_saude]}</Badge>
                   <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <Badge color={PAG_COLOR[c.status_pagamento_mes]}>{PAG_LABEL[c.status_pagamento_mes]}</Badge>
-                    <PaymentSwitch checked={c.status_pagamento_mes === "pago"} onChange={() => alternarPagamento(c)} disabled={salvando} />
+                    <PaymentSwitch
+                      checked={c.status_pagamento_mes === "pago"}
+                      onChange={() => alternarPagamento(c)}
+                      disabled={salvando}
+                      title={c.status_pagamento_mes === "pago" ? "Marcar como pendente" : "Marcar como pago"}
+                    />
                   </div>
                   {c._d.diasRenovacao !== null && c._d.diasRenovacao <= 30 && (
                     <Badge color="#EAB308">Renova em {c._d.diasRenovacao}d</Badge>

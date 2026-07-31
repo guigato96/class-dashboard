@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, Save, Repeat, CheckCircle2, Clock, DollarSign } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, addMeses, labelMes } from "../lib/mes";
+import PaymentSwitch from "./PaymentSwitch";
 
 const PURPLE = "#8B5CF6";
 
@@ -354,6 +355,28 @@ export default function Despesas() {
     setNovoAberto(false);
   };
 
+  const alternarPago = async (despesa) => {
+    const novoPago = !despesa.pago;
+    setErro("");
+    setDespesas((prev) => prev.map((d) => (d.id === despesa.id ? { ...d, pago: novoPago } : d)));
+
+    const { error } = await supabase.from("historico_despesas").upsert(
+      {
+        despesa_id: despesa.id,
+        mes_referencia: mesRef,
+        valor: despesa.valor,
+        pago: novoPago,
+        data_pagamento: novoPago ? new Date().toISOString().slice(0, 10) : null,
+      },
+      { onConflict: "despesa_id,mes_referencia" }
+    );
+
+    if (error) {
+      setErro("Erro ao atualizar status: " + error.message);
+      setDespesas((prev) => prev.map((d) => (d.id === despesa.id ? { ...d, pago: despesa.pago } : d)));
+    }
+  };
+
   const removerDespesa = async (id) => {
     setSalvando(true);
     setErro("");
@@ -430,9 +453,12 @@ export default function Despesas() {
                   className="rounded-2xl overflow-hidden transition-transform duration-200 hover:-translate-y-0.5"
                   style={{ border: `1px solid ${corStatus}55`, borderLeft: `3px solid ${corStatus}`, backgroundColor: `${corStatus}1A` }}
                 >
-                  <button
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => { setExpandedId(aberto ? null : d.id); setNovoAberto(false); }}
-                    className="w-full flex items-center justify-between px-5 py-4 text-left"
+                    onKeyDown={(e) => { if (e.key === "Enter") { setExpandedId(aberto ? null : d.id); setNovoAberto(false); } }}
+                    className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-4 flex-wrap">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: corStatus }} />
@@ -447,10 +473,18 @@ export default function Despesas() {
                       )}
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs" style={{ color: corStatus }}>{d.pago ? "Pago" : "Pendente"}</span>
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <span className="text-xs" style={{ color: corStatus }}>{d.pago ? "Pago" : "Pendente"}</span>
+                        <PaymentSwitch
+                          checked={d.pago}
+                          onChange={() => alternarPago(d)}
+                          disabled={salvando}
+                          title={d.pago ? "Marcar como pendente" : "Marcar como pago"}
+                        />
+                      </div>
                       {aberto ? <ChevronUp size={18} color="#8B8B93" /> : <ChevronDown size={18} color="#8B8B93" />}
                     </div>
-                  </button>
+                  </div>
                   {aberto && (
                     <DespesaForm despesa={d} onSave={salvarDespesa} onCancel={() => setExpandedId(null)} onDelete={removerDespesa} salvando={salvando} mesLabel={mesLabel} />
                   )}

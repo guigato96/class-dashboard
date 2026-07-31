@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, Save, CheckCircle2, Clock, DollarSign } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, addMeses, labelMes } from "../lib/mes";
+import PaymentSwitch from "./PaymentSwitch";
 
 const PURPLE = "#8B5CF6";
 
@@ -255,6 +256,22 @@ export default function EntradasExtras() {
     setNovoAberto(false);
   };
 
+  const alternarRecebido = async (entrada) => {
+    const novoRecebido = !entrada.recebido;
+    setErro("");
+    setEntradas((prev) => prev.map((e) => (e.id === entrada.id ? { ...e, recebido: novoRecebido } : e)));
+
+    const { error } = await supabase
+      .from("entradas_extras")
+      .update({ recebido: novoRecebido, data_recebimento: novoRecebido ? new Date().toISOString().slice(0, 10) : null })
+      .eq("id", entrada.id);
+
+    if (error) {
+      setErro("Erro ao atualizar status: " + error.message);
+      setEntradas((prev) => prev.map((e) => (e.id === entrada.id ? { ...e, recebido: entrada.recebido } : e)));
+    }
+  };
+
   const removerEntrada = async (id) => {
     setSalvando(true);
     setErro("");
@@ -344,7 +361,15 @@ export default function EntradasExtras() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs" style={{ color: corStatus }}>{e.recebido ? "Recebido" : "Pendente"}</span>
+                      <div className="flex items-center gap-1.5" onClick={(ev) => ev.stopPropagation()}>
+                        <span className="text-xs" style={{ color: corStatus }}>{e.recebido ? "Recebido" : "Pendente"}</span>
+                        <PaymentSwitch
+                          checked={e.recebido}
+                          onChange={() => alternarRecebido(e)}
+                          disabled={salvando}
+                          title={e.recebido ? "Marcar como pendente" : "Marcar como recebido"}
+                        />
+                      </div>
                       {aberto ? <ChevronUp size={18} color="#8B8B93" /> : <ChevronDown size={18} color="#8B8B93" />}
                     </div>
                   </div>

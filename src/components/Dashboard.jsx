@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { DollarSign, TrendingDown, TrendingUp, Minus, Wallet } from "lucide-react";
+import { DollarSign, TrendingDown, TrendingUp, Minus, Wallet, Target } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, ultimosMeses } from "../lib/mes";
 import OverviewChart from "./OverviewChart";
@@ -27,7 +27,7 @@ function Delta({ atual, anterior, invertido }) {
   );
 }
 
-function StatCard({ label, value, icon: Icon, accent, delta }) {
+function StatCard({ label, value, sub, icon: Icon, accent, delta }) {
   return (
     <div
       className="rounded-2xl p-4 flex-1 min-w-[160px] transition-transform duration-200 hover:-translate-y-0.5"
@@ -42,6 +42,7 @@ function StatCard({ label, value, icon: Icon, accent, delta }) {
         )}
       </div>
       <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>{value}</div>
+      {sub && <div className="text-xs mt-1" style={{ color: "#8B8B93" }}>{sub}</div>}
       {delta}
     </div>
   );
@@ -53,6 +54,7 @@ export default function Dashboard() {
   const [despesaMes, setDespesaMes] = useState(0);
   const [receitaMesAnterior, setReceitaMesAnterior] = useState(0);
   const [despesaMesAnterior, setDespesaMesAnterior] = useState(0);
+  const [previsaoMes, setPrevisaoMes] = useState(0);
   const [historicoMensal, setHistoricoMensal] = useState([]);
 
   useEffect(() => {
@@ -61,10 +63,11 @@ export default function Dashboard() {
       const meses = ultimosMeses(6).map((m) => ({ ...m, receita: 0, despesa: 0 }));
       const inicioRef = meses[0].ref;
 
-      const [{ data: pagamentos }, { data: despesas }, { data: entradas }] = await Promise.all([
+      const [{ data: pagamentos }, { data: despesas }, { data: entradas }, { data: clientesAtivos }] = await Promise.all([
         supabase.from("historico_pagamentos").select("mes_referencia, valor_pago, status").gte("mes_referencia", inicioRef),
         supabase.from("historico_despesas").select("mes_referencia, valor, pago").gte("mes_referencia", inicioRef),
         supabase.from("entradas_extras").select("mes_referencia, valor, recebido").eq("ativo", true).gte("mes_referencia", inicioRef),
+        supabase.from("clientes").select("valor_mensal").eq("ativo", true),
       ]);
 
       (pagamentos || []).forEach((h) => {
@@ -89,10 +92,18 @@ export default function Dashboard() {
       const atual = meses[idxAtual];
       const anterior = idxAtual > 0 ? meses[idxAtual - 1] : null;
 
+      // Previsão: contratos ativos (recorrentes) + entradas extras já lançadas nesse mês,
+      // recebidas ou não — dá o total esperado mesmo que ainda esteja tudo pendente.
+      const somaContratos = (clientesAtivos || []).reduce((sum, c) => sum + (Number(c.valor_mensal) || 0), 0);
+      const somaEntradasMes = (entradas || [])
+        .filter((e) => e.mes_referencia === mesRef)
+        .reduce((sum, e) => sum + (Number(e.valor) || 0), 0);
+
       setReceitaMes(atual?.receita || 0);
       setDespesaMes(atual?.despesa || 0);
       setReceitaMesAnterior(anterior?.receita || 0);
       setDespesaMesAnterior(anterior?.despesa || 0);
+      setPrevisaoMes(somaContratos + somaEntradasMes);
       setHistoricoMensal(meses);
       setLoaded(true);
     })();
@@ -112,6 +123,13 @@ export default function Dashboard() {
       </h1>
 
       <div className="flex flex-wrap gap-3 mb-6">
+        <StatCard
+          label="Previsão do mês"
+          value={fmtMoney(previsaoMes)}
+          sub="Contratos ativos + entradas lançadas"
+          icon={Target}
+          accent="#A78BFA"
+        />
         <StatCard
           label="Receita do mês"
           value={fmtMoney(receitaMes)}

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, ChevronDown, ChevronUp, Users, TrendingUp, TrendingDown, Minus, AlertTriangle, Calendar, DollarSign, Trash2, Save, Search } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, Users, TrendingUp, TrendingDown, Minus, AlertTriangle, Calendar, DollarSign, Ban, Save, Search } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
-import { mesAtualRef, mesAtualLabel } from "../lib/mes";
+import { mesAtualRef, labelMes } from "../lib/mes";
 import PaymentSwitch from "./PaymentSwitch";
+import MonthNav from "./MonthNav";
 
 const PURPLE = "#8B5CF6";
 const PURPLE_LIGHT = "#C4B5FD";
@@ -246,8 +247,9 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
               disabled={salvando}
               className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-md disabled:opacity-50"
               style={{ color: "#E11D2E", border: "1px solid #E11D2E33" }}
+              title="Encerra o contrato e tira o cliente da carteira ativa, mas mantém todo o histórico de pagamentos"
             >
-              <Trash2 size={14} /> Remover cliente
+              <Ban size={14} /> Cancelar contrato
             </button>
           )}
         </div>
@@ -314,6 +316,7 @@ function SaudeCard({ positivos, neutros, criticos }) {
 }
 
 export default function GestaoClientes() {
+  const [mesRef, setMesRef] = useState(mesAtualRef());
   const [clientes, setClientes] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [salvando, setSalvando] = useState(false);
@@ -325,66 +328,93 @@ export default function GestaoClientes() {
   const [erro, setErro] = useState("");
 
   const hoje = useMemo(() => new Date(new Date().toDateString()), []);
-  const mesLabel = mesAtualLabel();
+  const mesLabel = labelMes(mesRef);
+  const mesEhAtual = mesRef === mesAtualRef();
 
   useEffect(() => {
+    setLoaded(false);
+    setExpandedId(null);
+    setNovoAberto(false);
     (async () => {
-      const { data: clientesData, error: clientesError } = await supabase
-        .from("clientes")
-        .select("*")
-        .eq("ativo", true)
-        .order("nome");
+      if (mesEhAtual) {
+        // Mês corrente: carteira ativa de verdade, com geração automática do lançamento do mês.
+        const { data: clientesData, error: clientesError } = await supabase
+          .from("clientes")
+          .select("*")
+          .eq("ativo", true)
+          .order("nome");
 
-      if (clientesError) {
-        setErro("Erro ao carregar clientes: " + clientesError.message);
-        setLoaded(true);
-        return;
-      }
+        if (clientesError) {
+          setErro("Erro ao carregar clientes: " + clientesError.message);
+          setLoaded(true);
+          return;
+        }
 
-      const lista = clientesData || [];
-      const mesRef = mesAtualRef();
+        const lista = clientesData || [];
 
-      const { data: historicoData, error: historicoError } = await supabase
-        .from("historico_pagamentos")
-        .select("*")
-        .eq("mes_referencia", mesRef)
-        .in("cliente_id", lista.length ? lista.map((c) => c.id) : [""]);
+        const { data: historicoData, error: historicoError } = await supabase
+          .from("historico_pagamentos")
+          .select("*")
+          .eq("mes_referencia", mesRef)
+          .in("cliente_id", lista.length ? lista.map((c) => c.id) : [""]);
 
-      if (historicoError) {
-        setErro("Erro ao carregar pagamentos do mês: " + historicoError.message);
-        setClientes(lista);
-        setLoaded(true);
-        return;
-      }
+        if (historicoError) {
+          setErro("Erro ao carregar pagamentos do mês: " + historicoError.message);
+          setClientes(lista);
+          setLoaded(true);
+          return;
+        }
 
-      const historicoMap = new Map((historicoData || []).map((h) => [h.cliente_id, h]));
-      const semRegistro = lista.filter((c) => !historicoMap.has(c.id));
+        const historicoMap = new Map((historicoData || []).map((h) => [h.cliente_id, h]));
+        const semRegistro = lista.filter((c) => !historicoMap.has(c.id));
 
-      if (semRegistro.length > 0) {
-        const novosRegistros = semRegistro.map((c) => ({
-          cliente_id: c.id,
-          mes_referencia: mesRef,
-          status: "pendente",
+        if (semRegistro.length > 0) {
+          const novosRegistros = semRegistro.map((c) => ({
+            cliente_id: c.id,
+            mes_referencia: mesRef,
+            status: "pendente",
+          }));
+          const { data: criados } = await supabase.from("historico_pagamentos").insert(novosRegistros).select();
+          (criados || []).forEach((h) => historicoMap.set(h.cliente_id, h));
+        }
+
+        const comPagamentoDoMes = lista.map((c) => ({
+          ...c,
+          status_pagamento_mes: historicoMap.get(c.id)?.status || "pendente",
         }));
-        const { data: criados } = await supabase.from("historico_pagamentos").insert(novosRegistros).select();
-        (criados || []).forEach((h) => historicoMap.set(h.cliente_id, h));
+
+        setClientes(comPagamentoDoMes);
+      } else {
+        // Meses passados: mostra quem teve lançamento naquele mês, mesmo que o
+        // contrato já tenha sido cancelado depois — histórico nunca some.
+        const { data: historicoData, error: historicoError } = await supabase
+          .from("historico_pagamentos")
+          .select("*, clientes(*)")
+          .eq("mes_referencia", mesRef);
+
+        if (historicoError) {
+          setErro("Erro ao carregar pagamentos do mês: " + historicoError.message);
+          setClientes([]);
+          setLoaded(true);
+          return;
+        }
+
+        const lista = (historicoData || [])
+          .filter((h) => h.clientes)
+          .map((h) => ({ ...h.clientes, status_pagamento_mes: h.status }))
+          .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
+
+        setClientes(lista);
       }
 
-      const comPagamentoDoMes = lista.map((c) => ({
-        ...c,
-        status_pagamento_mes: historicoMap.get(c.id)?.status || "pendente",
-      }));
-
-      setClientes(comPagamentoDoMes);
       setLoaded(true);
     })();
-  }, []);
+  }, [mesRef]);
 
   const salvarCliente = async (cliente, isNew) => {
     setSalvando(true);
     setErro("");
     const payload = buildPayload(cliente);
-    const mesRef = mesAtualRef();
     let clienteId = cliente.id;
 
     if (isNew) {
@@ -443,7 +473,7 @@ export default function GestaoClientes() {
     const { error } = await supabase.from("historico_pagamentos").upsert(
       {
         cliente_id: cliente.id,
-        mes_referencia: mesAtualRef(),
+        mes_referencia: mesRef,
         status: novoStatus,
         valor_pago: novoStatus === "pago" ? cliente.valor_mensal : null,
         data_pagamento: novoStatus === "pago" ? new Date().toISOString().slice(0, 10) : null,
@@ -457,12 +487,12 @@ export default function GestaoClientes() {
     }
   };
 
-  const removerCliente = async (id) => {
+  const cancelarContrato = async (id) => {
     setSalvando(true);
     setErro("");
-    const { error } = await supabase.from("clientes").delete().eq("id", id);
+    const { error } = await supabase.from("clientes").update({ ativo: false }).eq("id", id);
     if (error) {
-      setErro("Erro ao remover cliente: " + error.message);
+      setErro("Erro ao cancelar contrato: " + error.message);
       setSalvando(false);
       return;
     }
@@ -523,21 +553,33 @@ export default function GestaoClientes() {
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex items-start justify-between mb-3">
         <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>
           Clientes{" "}
           <span style={{ background: `linear-gradient(90deg, ${PURPLE_LIGHT}, ${PURPLE})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
             ativos
           </span>
         </h1>
-        <button
-          onClick={() => { setNovoAberto(true); setExpandedId(null); }}
-          className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-[filter] hover:brightness-110"
-          style={{ backgroundColor: PURPLE, color: "#fff" }}
-        >
-          <Plus size={16} /> Novo cliente
-        </button>
+        {mesEhAtual && (
+          <button
+            onClick={() => { setNovoAberto(true); setExpandedId(null); }}
+            className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-[filter] hover:brightness-110"
+            style={{ backgroundColor: PURPLE, color: "#fff" }}
+          >
+            <Plus size={16} /> Novo cliente
+          </button>
+        )}
       </div>
+
+      <div className="mb-5">
+        <MonthNav mesRef={mesRef} onChange={setMesRef} />
+      </div>
+
+      {!mesEhAtual && (
+        <div className="text-xs mb-4" style={{ color: "#8B8B93" }}>
+          Visualizando histórico de {mesLabel} — inclui clientes com contrato já cancelado.
+        </div>
+      )}
 
       {erro && <div className="text-xs mb-3" style={{ color: "#E11D2E" }}>{erro}</div>}
 
@@ -659,7 +701,7 @@ export default function GestaoClientes() {
                 </div>
               </div>
               {aberto && (
-                <ClientForm client={c} onSave={salvarCliente} onCancel={() => setExpandedId(null)} onDelete={removerCliente} salvando={salvando} mesLabel={mesLabel} />
+                <ClientForm client={c} onSave={salvarCliente} onCancel={() => setExpandedId(null)} onDelete={cancelarContrato} salvando={salvando} mesLabel={mesLabel} />
               )}
             </div>
           );

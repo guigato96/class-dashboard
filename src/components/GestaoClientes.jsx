@@ -296,6 +296,50 @@ function StatCard({ label, value, sub, icon: Icon, accent }) {
   );
 }
 
+function ConfirmModal({ nome, loading, onConfirm, onCancel }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+      onClick={onCancel}
+    >
+      <div
+        className="w-full max-w-sm rounded-2xl p-5"
+        style={{ backgroundColor: "#141417", border: "1px solid #2A2A2E" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <Ban size={16} style={{ color: "#E11D2E" }} />
+          <div className="text-sm font-semibold" style={{ color: "#F4F4F5" }}>Cancelar contrato</div>
+        </div>
+        <div className="text-xs mb-5" style={{ color: "#8B8B93" }}>
+          Tem certeza que quer cancelar o contrato de{" "}
+          <strong style={{ color: "#F4F4F5" }}>{nome || "este cliente"}</strong>? Ele sai da carteira ativa a
+          partir de agora, mas o histórico de pagamentos anteriores continua salvo.
+        </div>
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="text-xs px-3 py-2 rounded-md disabled:opacity-50"
+            style={{ color: "#8B8B93", border: "1px solid #2A2A2E" }}
+          >
+            Voltar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md disabled:opacity-50 transition-[filter] hover:brightness-110"
+            style={{ backgroundColor: "#E11D2E", color: "#fff" }}
+          >
+            <Ban size={14} /> {loading ? "Cancelando..." : "Cancelar contrato"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SaudeCard({ positivos, neutros, criticos }) {
   const total = positivos + neutros + criticos;
   const score = total > 0 ? Math.round((positivos * 100 + neutros * 50) / total) : 0;
@@ -331,6 +375,7 @@ export default function GestaoClientes() {
   const [busca, setBusca] = useState("");
   const [ordenacao, setOrdenacao] = useState("risco");
   const [erro, setErro] = useState("");
+  const [confirmCancelar, setConfirmCancelar] = useState(null);
 
   const hoje = useMemo(() => new Date(new Date().toDateString()), []);
   const mesLabel = labelMes(mesRef);
@@ -520,6 +565,18 @@ export default function GestaoClientes() {
     if (error) {
       setErro("Erro ao atualizar pagamento: " + error.message);
       setClientes((prev) => prev.map((c) => (c.id === cliente.id ? { ...c, status_pagamento_mes: cliente.status_pagamento_mes } : c)));
+    }
+  };
+
+  const alterarSaude = async (cliente, novoStatus) => {
+    const anterior = cliente.status_saude;
+    setErro("");
+    setClientes((prev) => prev.map((c) => (c.id === cliente.id ? { ...c, status_saude: novoStatus } : c)));
+
+    const { error } = await supabase.from("clientes").update({ status_saude: novoStatus }).eq("id", cliente.id);
+    if (error) {
+      setErro("Erro ao atualizar status de saúde: " + error.message);
+      setClientes((prev) => prev.map((c) => (c.id === cliente.id ? { ...c, status_saude: anterior } : c)));
     }
   };
 
@@ -713,7 +770,21 @@ export default function GestaoClientes() {
                     <div className="text-sm font-semibold" style={{ color: "#F4F4F5" }}>{c.nome || "Sem nome"}</div>
                     <div className="text-xs" style={{ color: "#8B8B93" }}>{c.nicho || "Nicho não definido"} · {fmtMoney(c.valor_mensal)}/mês</div>
                   </div>
-                  <Badge color={SAUDE_COLOR[c.status_saude]}>{SAUDE_LABEL[c.status_saude]}</Badge>
+                  <select
+                    value={c.status_saude}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => alterarSaude(c, e.target.value)}
+                    disabled={salvando}
+                    title="Alterar status de saúde do cliente"
+                    className="text-xs font-medium rounded-full pl-2.5 pr-1.5 py-0.5 outline-none cursor-pointer appearance-none disabled:opacity-50"
+                    style={{ backgroundColor: SAUDE_COLOR[c.status_saude] + "22", color: SAUDE_COLOR[c.status_saude], border: "none" }}
+                  >
+                    {Object.entries(SAUDE_LABEL).map(([value, label]) => (
+                      <option key={value} value={value} style={{ backgroundColor: "#141417", color: "#F4F4F5" }}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
                   {c._d.diasRenovacao !== null && c._d.diasRenovacao <= 30 && (
                     <Badge color="#EAB308">Renova em {c._d.diasRenovacao}d</Badge>
                   )}
@@ -725,7 +796,10 @@ export default function GestaoClientes() {
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                    <Badge color={PAG_COLOR[c.status_pagamento_mes]}>{PAG_LABEL[c.status_pagamento_mes]}</Badge>
+                    <Badge color={PAG_COLOR[c.status_pagamento_mes]}>
+                      {PAG_LABEL[c.status_pagamento_mes]}
+                      {c.status_pagamento_mes !== "pago" && c.dia_vencimento ? ` · vence dia ${c.dia_vencimento}` : ""}
+                    </Badge>
                     <PaymentSwitch
                       checked={c.status_pagamento_mes === "pago"}
                       onChange={() => alternarPagamento(c)}
@@ -737,12 +811,31 @@ export default function GestaoClientes() {
                 </div>
               </div>
               {aberto && (
-                <ClientForm client={c} onSave={salvarCliente} onCancel={() => setExpandedId(null)} onDelete={cancelarContrato} salvando={salvando} mesLabel={mesLabel} />
+                <ClientForm
+                  client={c}
+                  onSave={salvarCliente}
+                  onCancel={() => setExpandedId(null)}
+                  onDelete={(id) => setConfirmCancelar({ id, nome: c.nome })}
+                  salvando={salvando}
+                  mesLabel={mesLabel}
+                />
               )}
             </div>
           );
         })}
       </div>
+
+      {confirmCancelar && (
+        <ConfirmModal
+          nome={confirmCancelar.nome}
+          loading={salvando}
+          onCancel={() => setConfirmCancelar(null)}
+          onConfirm={async () => {
+            await cancelarContrato(confirmCancelar.id);
+            setConfirmCancelar(null);
+          }}
+        />
+      )}
     </div>
   );
 }

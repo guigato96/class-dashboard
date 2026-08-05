@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Plus, ChevronDown, ChevronUp, Users, TrendingUp, TrendingDown, Minus, AlertTriangle, Calendar, DollarSign, Ban, Save, Search } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
-import { mesAtualRef, labelMes } from "../lib/mes";
+import { mesAtualRef, labelMes, mesDaData } from "../lib/mes";
 import PaymentSwitch from "./PaymentSwitch";
 import MonthNav from "./MonthNav";
 
@@ -75,6 +75,11 @@ function buildPayload(c) {
     data_proxima_renovacao: toDateOrNull(c.data_proxima_renovacao),
     oportunidade_upsell: c.oportunidade_upsell || null,
   };
+}
+
+function contratoJaComecou(c, mesRef) {
+  const mesInicio = mesDaData(c.data_inicio_contrato);
+  return !mesInicio || mesInicio <= mesRef;
 }
 
 function computeDerived(c, hoje) {
@@ -338,6 +343,7 @@ export default function GestaoClientes() {
     (async () => {
       if (mesEhAtual) {
         // Mês corrente: carteira ativa de verdade, com geração automática do lançamento do mês.
+        // Clientes com início de contrato futuro (relativo a este mês) ainda não entram.
         const { data: clientesData, error: clientesError } = await supabase
           .from("clientes")
           .select("*")
@@ -350,7 +356,7 @@ export default function GestaoClientes() {
           return;
         }
 
-        const lista = clientesData || [];
+        const lista = (clientesData || []).filter((c) => contratoJaComecou(c, mesRef));
 
         const { data: historicoData, error: historicoError } = await supabase
           .from("historico_pagamentos")
@@ -384,7 +390,7 @@ export default function GestaoClientes() {
         }));
 
         setClientes(comPagamentoDoMes);
-      } else {
+      } else if (mesRef < mesAtualRef()) {
         // Meses passados: mostra quem teve lançamento naquele mês, mesmo que o
         // contrato já tenha sido cancelado depois — histórico nunca some.
         const { data: historicoData, error: historicoError } = await supabase
@@ -403,6 +409,36 @@ export default function GestaoClientes() {
           .filter((h) => h.clientes)
           .map((h) => ({ ...h.clientes, status_pagamento_mes: h.status }))
           .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
+
+        setClientes(lista);
+      } else {
+        // Meses futuros: prévia de quem já estará com contrato ativo, sem gerar
+        // lançamento de verdade ainda (só mostra um pré-visto, salvo se você já mexeu nele).
+        const { data: clientesData, error: clientesError } = await supabase
+          .from("clientes")
+          .select("*")
+          .eq("ativo", true)
+          .order("nome");
+
+        if (clientesError) {
+          setErro("Erro ao carregar clientes: " + clientesError.message);
+          setLoaded(true);
+          return;
+        }
+
+        const listaBase = (clientesData || []).filter((c) => contratoJaComecou(c, mesRef));
+
+        const { data: historicoData } = await supabase
+          .from("historico_pagamentos")
+          .select("*")
+          .eq("mes_referencia", mesRef)
+          .in("cliente_id", listaBase.length ? listaBase.map((c) => c.id) : [""]);
+
+        const historicoMap = new Map((historicoData || []).map((h) => [h.cliente_id, h]));
+        const lista = listaBase.map((c) => ({
+          ...c,
+          status_pagamento_mes: historicoMap.get(c.id)?.status || "pendente",
+        }));
 
         setClientes(lista);
       }

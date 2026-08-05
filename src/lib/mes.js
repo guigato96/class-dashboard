@@ -21,6 +21,10 @@ export function labelMes(ref) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+export function mesDaData(dataStr) {
+  return dataStr ? dataStr.slice(0, 7) + "-01" : null;
+}
+
 export function ultimosMeses(qtd) {
   const agora = new Date();
   const meses = [];

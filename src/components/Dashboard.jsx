@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { DollarSign, TrendingDown, TrendingUp, Minus, Wallet, Target } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
-import { mesAtualRef, ultimosMeses } from "../lib/mes";
+import { mesAtualRef, ultimosMeses, mesDaData } from "../lib/mes";
 import OverviewChart from "./OverviewChart";
 
 function fmtMoney(v) {
@@ -67,7 +67,7 @@ export default function Dashboard() {
         supabase.from("historico_pagamentos").select("mes_referencia, valor_pago, status").gte("mes_referencia", inicioRef),
         supabase.from("historico_despesas").select("mes_referencia, valor, pago").gte("mes_referencia", inicioRef),
         supabase.from("entradas_extras").select("mes_referencia, valor, recebido").eq("ativo", true).gte("mes_referencia", inicioRef),
-        supabase.from("clientes").select("valor_mensal").eq("ativo", true),
+        supabase.from("clientes").select("valor_mensal, data_inicio_contrato").eq("ativo", true),
       ]);
 
       (pagamentos || []).forEach((h) => {
@@ -94,7 +94,12 @@ export default function Dashboard() {
 
       // Previsão: contratos ativos (recorrentes) + entradas extras já lançadas nesse mês,
       // recebidas ou não — dá o total esperado mesmo que ainda esteja tudo pendente.
-      const somaContratos = (clientesAtivos || []).reduce((sum, c) => sum + (Number(c.valor_mensal) || 0), 0);
+      const somaContratos = (clientesAtivos || [])
+        .filter((c) => {
+          const mesInicio = mesDaData(c.data_inicio_contrato);
+          return !mesInicio || mesInicio <= mesRef;
+        })
+        .reduce((sum, c) => sum + (Number(c.valor_mensal) || 0), 0);
       const somaEntradasMes = (entradas || [])
         .filter((e) => e.mes_referencia === mesRef)
         .reduce((sum, e) => sum + (Number(e.valor) || 0), 0);

@@ -49,6 +49,7 @@ const emptyClient = () => ({
   motivo_observacao: "",
   data_ultima_reuniao: "",
   data_inicio_contrato: "",
+  data_fim_contrato: "",
   prazo_contrato_meses: 3,
   data_proxima_renovacao: "",
   oportunidade_upsell: "",
@@ -71,6 +72,7 @@ function buildPayload(c) {
     motivo_observacao: c.motivo_observacao || null,
     data_ultima_reuniao: toDateOrNull(c.data_ultima_reuniao),
     data_inicio_contrato: toDateOrNull(c.data_inicio_contrato),
+    data_fim_contrato: toDateOrNull(c.data_fim_contrato),
     prazo_contrato_meses: toNumberOrNull(c.prazo_contrato_meses),
     data_proxima_renovacao: toDateOrNull(c.data_proxima_renovacao),
     oportunidade_upsell: c.oportunidade_upsell || null,
@@ -80,6 +82,11 @@ function buildPayload(c) {
 function contratoJaComecou(c, mesRef) {
   const mesInicio = mesDaData(c.data_inicio_contrato);
   return !mesInicio || mesInicio <= mesRef;
+}
+
+function contratoAindaAtivo(c, mesRef) {
+  const mesFim = mesDaData(c.data_fim_contrato);
+  return !mesFim || mesRef <= mesFim;
 }
 
 function computeDerived(c, hoje) {
@@ -232,6 +239,9 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
       <Field label="Próxima renovação">
         <input className={inputCls} style={inputStyle} type="date" value={local.data_proxima_renovacao || ""} onChange={(e) => set("data_proxima_renovacao", e.target.value)} />
       </Field>
+      <Field label="Fim do contrato (opcional)">
+        <input className={inputCls} style={inputStyle} type="date" value={local.data_fim_contrato || ""} onChange={(e) => set("data_fim_contrato", e.target.value)} />
+      </Field>
 
       <div className="col-span-2 md:col-span-3">
         <Field label="Observação / motivo do status">
@@ -296,7 +306,10 @@ function StatCard({ label, value, sub, icon: Icon, accent }) {
   );
 }
 
-function ConfirmModal({ nome, loading, onConfirm, onCancel }) {
+function ConfirmModal({ nome, mesRefInicial, loading, onConfirm, onCancel }) {
+  const [mesFim, setMesFim] = useState(mesRefInicial);
+  const inputStyle = { border: "1px solid #2A2A2E", color: "#F4F4F5" };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -312,12 +325,21 @@ function ConfirmModal({ nome, loading, onConfirm, onCancel }) {
           <Ban size={16} style={{ color: "#E11D2E" }} />
           <div className="text-sm font-semibold" style={{ color: "#F4F4F5" }}>Cancelar contrato</div>
         </div>
-        <div className="text-xs mb-5" style={{ color: "#8B8B93" }}>
-          Tem certeza que quer cancelar o contrato de{" "}
-          <strong style={{ color: "#F4F4F5" }}>{nome || "este cliente"}</strong>? Ele sai da carteira ativa a
-          partir de agora, mas o histórico de pagamentos anteriores continua salvo.
+        <div className="text-xs mb-4" style={{ color: "#8B8B93" }}>
+          <strong style={{ color: "#F4F4F5" }}>{nome || "Este cliente"}</strong> continua aparecendo normalmente
+          até o último mês ativo escolhido abaixo — some da carteira só a partir do mês seguinte. Histórico de
+          meses anteriores nunca é afetado.
         </div>
-        <div className="flex justify-end gap-2">
+        <Field label="Último mês ativo">
+          <input
+            className={inputCls}
+            style={inputStyle}
+            type="month"
+            value={mesFim.slice(0, 7)}
+            onChange={(e) => setMesFim(e.target.value + "-01")}
+          />
+        </Field>
+        <div className="flex justify-end gap-2 mt-4">
           <button
             onClick={onCancel}
             disabled={loading}
@@ -327,12 +349,12 @@ function ConfirmModal({ nome, loading, onConfirm, onCancel }) {
             Voltar
           </button>
           <button
-            onClick={onConfirm}
+            onClick={() => onConfirm(mesFim)}
             disabled={loading}
             className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md disabled:opacity-50 transition-[filter] hover:brightness-110"
             style={{ backgroundColor: "#E11D2E", color: "#fff" }}
           >
-            <Ban size={14} /> {loading ? "Cancelando..." : "Cancelar contrato"}
+            <Ban size={14} /> {loading ? "Cancelando..." : "Confirmar cancelamento"}
           </button>
         </div>
       </div>
@@ -401,7 +423,7 @@ export default function GestaoClientes() {
           return;
         }
 
-        const lista = (clientesData || []).filter((c) => contratoJaComecou(c, mesRef));
+        const lista = (clientesData || []).filter((c) => contratoJaComecou(c, mesRef) && contratoAindaAtivo(c, mesRef));
 
         const { data: historicoData, error: historicoError } = await supabase
           .from("historico_pagamentos")
@@ -471,7 +493,7 @@ export default function GestaoClientes() {
           return;
         }
 
-        const listaBase = (clientesData || []).filter((c) => contratoJaComecou(c, mesRef));
+        const listaBase = (clientesData || []).filter((c) => contratoJaComecou(c, mesRef) && contratoAindaAtivo(c, mesRef));
 
         const { data: historicoData } = await supabase
           .from("historico_pagamentos")
@@ -580,16 +602,20 @@ export default function GestaoClientes() {
     }
   };
 
-  const cancelarContrato = async (id) => {
+  const cancelarContrato = async (id, mesFimRef) => {
     setSalvando(true);
     setErro("");
-    const { error } = await supabase.from("clientes").update({ ativo: false }).eq("id", id);
+    const { error } = await supabase.from("clientes").update({ data_fim_contrato: mesFimRef }).eq("id", id);
     if (error) {
       setErro("Erro ao cancelar contrato: " + error.message);
       setSalvando(false);
       return;
     }
-    setClientes((prev) => prev.filter((c) => c.id !== id));
+    setClientes((prev) =>
+      prev
+        .map((c) => (c.id === id ? { ...c, data_fim_contrato: mesFimRef } : c))
+        .filter((c) => c.id !== id || mesRef <= mesFimRef)
+    );
     setSalvando(false);
     setExpandedId(null);
   };
@@ -788,6 +814,9 @@ export default function GestaoClientes() {
                   {c._d.diasRenovacao !== null && c._d.diasRenovacao <= 30 && (
                     <Badge color="#EAB308">Renova em {c._d.diasRenovacao}d</Badge>
                   )}
+                  {c.data_fim_contrato && (
+                    <Badge color="#E11D2E">Encerra {labelMes(mesDaData(c.data_fim_contrato))}</Badge>
+                  )}
                   <span className="hidden md:flex items-center gap-1 text-xs" style={{ color: "#8B8B93" }}>
                     {c.tendencia === "subindo" && <TrendingUp size={14} style={{ color: "#22C55E" }} />}
                     {c.tendencia === "caindo" && <TrendingDown size={14} style={{ color: "#E11D2E" }} />}
@@ -815,7 +844,7 @@ export default function GestaoClientes() {
                   client={c}
                   onSave={salvarCliente}
                   onCancel={() => setExpandedId(null)}
-                  onDelete={(id) => setConfirmCancelar({ id, nome: c.nome })}
+                  onDelete={(id) => setConfirmCancelar({ id, nome: c.nome, mesRefInicial: mesRef })}
                   salvando={salvando}
                   mesLabel={mesLabel}
                 />
@@ -828,10 +857,11 @@ export default function GestaoClientes() {
       {confirmCancelar && (
         <ConfirmModal
           nome={confirmCancelar.nome}
+          mesRefInicial={confirmCancelar.mesRefInicial}
           loading={salvando}
           onCancel={() => setConfirmCancelar(null)}
-          onConfirm={async () => {
-            await cancelarContrato(confirmCancelar.id);
+          onConfirm={async (mesFim) => {
+            await cancelarContrato(confirmCancelar.id, mesFim);
             setConfirmCancelar(null);
           }}
         />

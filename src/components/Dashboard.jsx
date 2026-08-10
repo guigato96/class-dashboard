@@ -67,7 +67,7 @@ export default function Dashboard() {
         supabase.from("historico_pagamentos").select("mes_referencia, valor_pago, status").gte("mes_referencia", inicioRef),
         supabase.from("historico_despesas").select("mes_referencia, valor, pago").gte("mes_referencia", inicioRef),
         supabase.from("entradas_extras").select("mes_referencia, valor, recebido").eq("ativo", true).gte("mes_referencia", inicioRef),
-        supabase.from("clientes").select("valor_mensal, data_inicio_contrato").eq("ativo", true),
+        supabase.from("clientes").select("valor_mensal, data_inicio_contrato, data_fim_contrato").eq("ativo", true),
       ]);
 
       (pagamentos || []).forEach((h) => {
@@ -97,7 +97,8 @@ export default function Dashboard() {
       const somaContratos = (clientesAtivos || [])
         .filter((c) => {
           const mesInicio = mesDaData(c.data_inicio_contrato);
-          return !mesInicio || mesInicio <= mesRef;
+          const mesFim = mesDaData(c.data_fim_contrato);
+          return (!mesInicio || mesInicio <= mesRef) && (!mesFim || mesRef <= mesFim);
         })
         .reduce((sum, c) => sum + (Number(c.valor_mensal) || 0), 0);
       const somaEntradasMes = (entradas || [])

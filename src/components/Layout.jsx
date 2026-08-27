@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Clock, LogOut, ChevronLeft, ChevronRight, LayoutDashboard, Users, Receipt, Banknote } from "lucide-react";
+import { Clock, LogOut, ChevronLeft, ChevronRight, LayoutDashboard, Users, Receipt, Banknote, GitBranch, BarChart3 } from "lucide-react";
 import logoClass from "../assets/logo-class.png";
 import { mesAtualLabel } from "../lib/mes";
 
@@ -8,6 +8,8 @@ const PURPLE_LIGHT = "#C4B5FD";
 
 const ABAS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "funil", label: "Funil", icon: GitBranch },
+  { id: "comercial", label: "Comercial", icon: BarChart3 },
   { id: "clientes", label: "Clientes", icon: Users },
   { id: "entradas", label: "Entradas", icon: Banknote },
   { id: "despesas", label: "Despesas", icon: Receipt },

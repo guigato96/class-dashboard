@@ -6,6 +6,8 @@ import Dashboard from "./components/Dashboard";
 import GestaoClientes from "./components/GestaoClientes";
 import EntradasExtras from "./components/EntradasExtras";
 import Despesas from "./components/Despesas";
+import Funil from "./components/Funil";
+import VisaoComercial from "./components/VisaoComercial";
 
 export default function App() {
   const [session, setSession] = useState(undefined);
@@ -34,6 +36,8 @@ export default function App() {
   return (
     <Layout aba={aba} onAbaChange={setAba} onSignOut={() => supabase.auth.signOut()}>
       {aba === "dashboard" && <Dashboard />}
+      {aba === "funil" && <Funil />}
+      {aba === "comercial" && <VisaoComercial />}
       {aba === "clientes" && <GestaoClientes />}
       {aba === "entradas" && <EntradasExtras />}
       {aba === "despesas" && <Despesas />}

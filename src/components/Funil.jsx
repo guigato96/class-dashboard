@@ -47,8 +47,8 @@ function alertaLead(lead, hoje) {
 const ALERTA_STYLE = {
   vermelho: { border: "#E11D2E", bg: "rgba(225,29,46,0.10)" },
   amarelo: { border: "#EAB308", bg: "rgba(234,179,8,0.08)" },
-  verde: { border: "#22C55E", bg: "rgba(20,20,23,0.7)" },
-  neutro: { border: "#3B3448", bg: "rgba(20,20,23,0.5)" },
+  verde: { border: "#22C55E", bg: "var(--card-bg)" },
+  neutro: { border: "#3B3448", bg: "var(--card-bg-soft)" },
 };
 
 function buildLeadPayload(l) {
@@ -101,12 +101,12 @@ function LeadForm({ lead, onChange }) {
 
       <Field label="Origem">
         <select className={inputCls} style={inputStyle} value={lead.origem} onChange={(e) => set("origem", e.target.value)}>
-          {Object.entries(ORIGEM_LABEL).map(([v, l]) => <option key={v} value={v} style={{ backgroundColor: "#141417" }}>{l}</option>)}
+          {Object.entries(ORIGEM_LABEL).map(([v, l]) => <option key={v} value={v} style={{ backgroundColor: "var(--dropdown-bg)" }}>{l}</option>)}
         </select>
       </Field>
       <Field label="Temperatura">
         <select className={inputCls} style={inputStyle} value={lead.temperatura} onChange={(e) => set("temperatura", e.target.value)}>
-          {Object.entries(TEMP_LABEL).map(([v, l]) => <option key={v} value={v} style={{ backgroundColor: "#141417" }}>{l}</option>)}
+          {Object.entries(TEMP_LABEL).map(([v, l]) => <option key={v} value={v} style={{ backgroundColor: "var(--dropdown-bg)" }}>{l}</option>)}
         </select>
       </Field>
       <Field label="Plataformas de interesse">
@@ -114,7 +114,7 @@ function LeadForm({ lead, onChange }) {
           {["Google", "Meta"].map((p) => (
             <button key={p} type="button" onClick={() => togglePlataforma(p)}
               className="rounded-md px-3 py-1.5 text-sm"
-              style={{ border: "1px solid #2A2A2E", backgroundColor: lead.plataformas_interesse.includes(p) ? PURPLE + "22" : "transparent", color: lead.plataformas_interesse.includes(p) ? PURPLE : "#8B8B93" }}>
+              style={{ border: "1px solid var(--border)", backgroundColor: lead.plataformas_interesse.includes(p) ? PURPLE + "22" : "transparent", color: lead.plataformas_interesse.includes(p) ? PURPLE : "var(--ink-muted)" }}>
               {p}
             </button>
           ))}
@@ -122,9 +122,9 @@ function LeadForm({ lead, onChange }) {
       </Field>
       <Field label="Etapa">
         <select className={inputCls} style={inputStyle} value={lead.etapa} onChange={(e) => set("etapa", e.target.value)}>
-          {ETAPAS.map((e) => <option key={e.id} value={e.id} style={{ backgroundColor: "#141417" }}>{e.label}</option>)}
-          <option value="ganho" style={{ backgroundColor: "#141417" }}>Ganho</option>
-          <option value="perdido" style={{ backgroundColor: "#141417" }}>Perdido</option>
+          {ETAPAS.map((e) => <option key={e.id} value={e.id} style={{ backgroundColor: "var(--dropdown-bg)" }}>{e.label}</option>)}
+          <option value="ganho" style={{ backgroundColor: "var(--dropdown-bg)" }}>Ganho</option>
+          <option value="perdido" style={{ backgroundColor: "var(--dropdown-bg)" }}>Perdido</option>
         </select>
       </Field>
 
@@ -152,7 +152,7 @@ function ConversaoForm({ lead, dados, onChange }) {
       <Field label="Dia de vencimento"><input className={inputCls} style={inputStyle} type="number" min="1" max="31" value={dados.dia_vencimento} onChange={(e) => set("dia_vencimento", e.target.value)} placeholder="10" /></Field>
       <Field label="Início do contrato"><input className={inputCls} style={inputStyle} type="date" value={dados.data_inicio_contrato} onChange={(e) => set("data_inicio_contrato", e.target.value)} /></Field>
       <Field label="Prazo do contrato (meses)"><input className={inputCls} style={inputStyle} type="number" value={dados.prazo_contrato_meses} onChange={(e) => set("prazo_contrato_meses", e.target.value)} /></Field>
-      <div className="col-span-2 text-xs" style={{ color: "#8B8B93" }}>
+      <div className="col-span-2 text-xs" style={{ color: "var(--ink-muted)" }}>
         Depois de criado, o resto (grupo de WhatsApp, renovação, etc.) você completa direto na aba Clientes.
       </div>
     </div>
@@ -173,11 +173,11 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
   useEffect(() => setLocal(lead), [lead.id]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)" }} onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-2xl" style={{ backgroundColor: "#141417", border: "1px solid #2A2A2E" }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-6 py-4 sticky top-0" style={{ backgroundColor: "#17171B", borderBottom: `1px solid ${PURPLE}33` }}>
-          <div className="text-sm font-semibold" style={{ color: "#F4F4F5" }}>{isNew ? "Novo lead" : local.nome || "Lead"}</div>
-          <button onClick={onClose} className="p-1 rounded-md hover:bg-white/5" style={{ color: "#8B8B93" }}><X size={18} /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "var(--modal-overlay)" }} onClick={onClose}>
+      <div className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-2xl" style={{ backgroundColor: "var(--dropdown-bg)", border: "1px solid var(--border)" }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 sticky top-0" style={{ backgroundColor: "var(--header-bg)", borderBottom: `1px solid ${PURPLE}33` }}>
+          <div className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{isNew ? "Novo lead" : local.nome || "Lead"}</div>
+          <button onClick={onClose} className="p-1 rounded-md hover:bg-[var(--hover-bg)]" style={{ color: "var(--ink-muted)" }}><X size={18} /></button>
         </div>
 
         <div className="p-6 flex flex-col gap-5">
@@ -187,13 +187,13 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
 
               {!isNew && (
                 <div className="flex flex-col gap-2">
-                  <div className="text-xs uppercase tracking-wide" style={{ color: "#8B8B93" }}>Registrar interação</div>
+                  <div className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>Registrar interação</div>
                   <div className="flex gap-2">
                     <input className={inputCls + " flex-1"} style={inputStyle} value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex: liguei, disse que vai decidir semana que vem..." />
                     <button
                       onClick={() => { if (nota.trim()) { onRegistrarAtividade(local.id, nota.trim()); setNota(""); } }}
                       className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md"
-                      style={{ border: "1px solid #2A2A2E", color: "#F4F4F5" }}>
+                      style={{ border: "1px solid var(--border)", color: "var(--ink)" }}>
                       <MessageSquare size={14} /> Registrar
                     </button>
                   </div>
@@ -202,13 +202,13 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
 
               {!isNew && atividades.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <div className="text-xs uppercase tracking-wide" style={{ color: "#8B8B93" }}>Linha do tempo</div>
+                  <div className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>Linha do tempo</div>
                   <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
                     {atividades.map((a) => (
-                      <div key={a.id} className="text-xs rounded-md px-3 py-2" style={{ backgroundColor: "#1B1B20", color: "#B8B8C0" }}>
-                        <span style={{ color: "#55555C" }}>{new Date(a.data).toLocaleDateString("pt-BR")} · </span>
+                      <div key={a.id} className="text-xs rounded-md px-3 py-2" style={{ backgroundColor: "var(--subtle-bg)", color: "var(--ink-muted)" }}>
+                        <span style={{ color: "var(--ink-faint)" }}>{new Date(a.data).toLocaleDateString("pt-BR")} · </span>
                         {a.tipo === "mudanca_etapa"
-                          ? <>Etapa: <b style={{ color: "#F4F4F5" }}>{ETAPA_LABEL[a.etapa_de] || a.etapa_de}</b> → <b style={{ color: "#F4F4F5" }}>{ETAPA_LABEL[a.etapa_para] || a.etapa_para}</b></>
+                          ? <>Etapa: <b style={{ color: "var(--ink)" }}>{ETAPA_LABEL[a.etapa_de] || a.etapa_de}</b> → <b style={{ color: "var(--ink)" }}>{ETAPA_LABEL[a.etapa_para] || a.etapa_para}</b></>
                           : a.descricao}
                       </div>
                     ))}
@@ -216,7 +216,7 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
                 </div>
               )}
 
-              <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: "#2A2A2E" }}>
+              <div className="flex justify-between items-center pt-2 border-t" style={{ borderColor: "var(--border)" }}>
                 <div className="flex gap-2">
                   {!isNew && local.etapa !== "ganho" && local.etapa !== "perdido" && (
                     <>
@@ -234,7 +234,7 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={onClose} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "#8B8B93", border: "1px solid #2A2A2E" }}>Cancelar</button>
+                  <button onClick={onClose} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}>Cancelar</button>
                   <button onClick={() => onSave(local, isNew)} disabled={salvando}
                     className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md disabled:opacity-50 transition-[filter] hover:brightness-110"
                     style={{ backgroundColor: PURPLE, color: "#fff" }}>
@@ -247,10 +247,10 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
 
           {modo === "converter" && (
             <>
-              <div className="text-sm" style={{ color: "#8B8B93" }}>Confirma os dados e o lead vira cliente ativo na aba Clientes.</div>
+              <div className="text-sm" style={{ color: "var(--ink-muted)" }}>Confirma os dados e o lead vira cliente ativo na aba Clientes.</div>
               <ConversaoForm lead={local} dados={conv} onChange={setConv} />
-              <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: "#2A2A2E" }}>
-                <button onClick={() => setModo("editar")} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "#8B8B93", border: "1px solid #2A2A2E" }}>Voltar</button>
+              <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                <button onClick={() => setModo("editar")} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}>Voltar</button>
                 <button onClick={() => onConverter(local, conv)} disabled={salvando}
                   className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md disabled:opacity-50"
                   style={{ backgroundColor: "#22C55E", color: "#fff" }}>
@@ -264,12 +264,12 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
             <>
               <Field label="Motivo da perda">
                 <select className={inputCls} style={inputStyle} value={motivoPerda} onChange={(e) => setMotivoPerda(e.target.value)}>
-                  <option value="" style={{ backgroundColor: "#141417" }}>Selecione...</option>
-                  {MOTIVOS_PERDA.map((m) => <option key={m} value={m} style={{ backgroundColor: "#141417" }}>{m}</option>)}
+                  <option value="" style={{ backgroundColor: "var(--dropdown-bg)" }}>Selecione...</option>
+                  {MOTIVOS_PERDA.map((m) => <option key={m} value={m} style={{ backgroundColor: "var(--dropdown-bg)" }}>{m}</option>)}
                 </select>
               </Field>
-              <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: "#2A2A2E" }}>
-                <button onClick={() => setModo("editar")} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "#8B8B93", border: "1px solid #2A2A2E" }}>Voltar</button>
+              <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                <button onClick={() => setModo("editar")} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}>Voltar</button>
                 <button onClick={() => onMarcarPerdido(local, motivoPerda)} disabled={salvando || !motivoPerda}
                   className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md disabled:opacity-50"
                   style={{ backgroundColor: "#E11D2E", color: "#fff" }}>
@@ -398,12 +398,12 @@ export default function Funil() {
     setSelecionado(null);
   };
 
-  if (!loaded) return <div style={{ color: "#8B8B93" }} className="text-sm py-16 text-center">Carregando funil...</div>;
+  if (!loaded) return <div style={{ color: "var(--ink-muted)" }} className="text-sm py-16 text-center">Carregando funil...</div>;
 
   return (
     <div>
       <div className="flex items-start justify-between mb-3">
-        <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>
+        <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>
           Funil <span style={{ background: `linear-gradient(90deg, ${PURPLE_LIGHT}, ${PURPLE})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>comercial</span>
         </h1>
         <button onClick={() => setNovoAberto(true)} className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-[filter] hover:brightness-110" style={{ backgroundColor: PURPLE, color: "#fff" }}>
@@ -423,13 +423,13 @@ export default function Funil() {
       <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
         {[{ id: "todos", label: "Todos" }, { id: "atrasados", label: "Atrasados" }, { id: "quente", label: "Quentes" }].map((f) => (
           <button key={f.id} onClick={() => setFiltro(f.id)} className="px-3 py-1.5 rounded-full transition-colors"
-            style={{ border: "1px solid #2A2A2E", backgroundColor: filtro === f.id ? PURPLE : "transparent", color: filtro === f.id ? "#fff" : "#8B8B93" }}>
+            style={{ border: "1px solid var(--border)", backgroundColor: filtro === f.id ? PURPLE : "transparent", color: filtro === f.id ? "#fff" : "var(--ink-muted)" }}>
             {f.label}
           </button>
         ))}
-        <div className="flex items-center gap-1.5 ml-auto rounded-md px-2.5 py-1.5" style={{ border: "1px solid #2A2A2E" }}>
-          <Search size={13} style={{ color: "#8B8B93" }} />
-          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome..." className="bg-transparent outline-none text-xs w-36" style={{ color: "#F4F4F5" }} />
+        <div className="flex items-center gap-1.5 ml-auto rounded-md px-2.5 py-1.5" style={{ border: "1px solid var(--border)" }}>
+          <Search size={13} style={{ color: "var(--ink-muted)" }} />
+          <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome..." className="bg-transparent outline-none text-xs w-36" style={{ color: "var(--ink)" }} />
         </div>
       </div>
 
@@ -437,8 +437,8 @@ export default function Funil() {
         {colunas.map((col) => (
           <div key={col.id} className="flex flex-col gap-2 min-w-[200px]">
             <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#8B8B93" }}>{col.label}</span>
-              <span className="text-xs" style={{ color: "#55555C" }}>{col.leads.length}</span>
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{col.label}</span>
+              <span className="text-xs" style={{ color: "var(--ink-faint)" }}>{col.leads.length}</span>
             </div>
             <div className="flex flex-col gap-2">
               {col.leads.map((l) => {
@@ -447,16 +447,16 @@ export default function Funil() {
                   <div key={l.id} onClick={() => abrirLead(l)}
                     className="rounded-xl p-3 cursor-pointer transition-transform duration-150 hover:-translate-y-0.5"
                     style={{ border: `1px solid ${estilo.border}55`, borderLeft: `3px solid ${estilo.border}`, backgroundColor: estilo.bg }}>
-                    <div className="text-sm font-medium mb-1" style={{ color: "#F4F4F5" }}>{l.nome}</div>
-                    <div className="text-xs mb-2" style={{ color: "#8B8B93" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
+                    <div className="text-sm font-medium mb-1" style={{ color: "var(--ink)" }}>{l.nome}</div>
+                    <div className="text-xs mb-2" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <Badge color={TEMP_COLOR[l.temperatura]}>{TEMP_LABEL[l.temperatura]}</Badge>
-                      {l.data_proxima_acao && <span className="text-xs flex items-center gap-1" style={{ color: "#8B8B93" }}><Clock size={11} /> {new Date(l.data_proxima_acao + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>}
+                      {l.data_proxima_acao && <span className="text-xs flex items-center gap-1" style={{ color: "var(--ink-muted)" }}><Clock size={11} /> {new Date(l.data_proxima_acao + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>}
                     </div>
                   </div>
                 );
               })}
-              {col.leads.length === 0 && <div className="text-xs text-center py-6 rounded-xl" style={{ color: "#3B3448", border: "1px dashed #2A2A2E" }}>vazio</div>}
+              {col.leads.length === 0 && <div className="text-xs text-center py-6 rounded-xl" style={{ color: "#3B3448", border: "1px dashed var(--border)" }}>vazio</div>}
             </div>
           </div>
         ))}

@@ -14,11 +14,11 @@ function BarraHorizontal({ label, valor, total, cor }) {
   const pct = total > 0 ? (valor / total) * 100 : 0;
   return (
     <div className="flex items-center gap-3">
-      <div className="w-32 shrink-0 text-xs" style={{ color: "#8B8B93" }}>{label}</div>
-      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#232327" }}>
+      <div className="w-32 shrink-0 text-xs" style={{ color: "var(--ink-muted)" }}>{label}</div>
+      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--track-bg)" }}>
         <div style={{ width: `${pct}%`, backgroundColor: cor, height: "100%" }} />
       </div>
-      <div className="w-8 shrink-0 text-xs text-right font-variant-numeric-tabular" style={{ color: "#F4F4F5" }}>{valor}</div>
+      <div className="w-8 shrink-0 text-xs text-right font-variant-numeric-tabular" style={{ color: "var(--ink)" }}>{valor}</div>
     </div>
   );
 }
@@ -37,7 +37,7 @@ function LeadsPorMesChart({ data }) {
     <div className="relative">
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ overflow: "visible" }}>
         {[0, niceMax * 0.5, niceMax].map((t, i) => (
-          <line key={i} x1={padLeft} x2={width - 8} y1={yFor(t)} y2={yFor(t)} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+          <line key={i} x1={padLeft} x2={width - 8} y1={yFor(t)} y2={yFor(t)} stroke="var(--card-border)" strokeWidth="1" />
         ))}
         {data.map((d, i) => {
           const x = padLeft + i * bandW + (bandW - barW) / 2;
@@ -48,14 +48,14 @@ function LeadsPorMesChart({ data }) {
             <g key={d.mes} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} style={{ cursor: "pointer" }}>
               <rect x={x - 6} y={padTop} width={barW + 12} height={plotH} fill="transparent" />
               <rect x={x} y={barH > 0 ? y : padTop + plotH - 1} width={barW} height={Math.max(barH, 1)} rx="4" fill="#8B5CF6" opacity={isHover ? 1 : 0.7} />
-              <text x={x + barW / 2} y={height - 6} textAnchor="middle" fontSize="10" fill="#8B8B93" fontFamily="Inter, sans-serif">{d.mes}</text>
+              <text x={x + barW / 2} y={height - 6} textAnchor="middle" fontSize="10" fill="var(--ink-muted)" fontFamily="Inter, sans-serif">{d.mes}</text>
             </g>
           );
         })}
       </svg>
       {hover !== null && (
-        <div className="absolute pointer-events-none rounded-md px-2.5 py-1.5 text-xs" style={{ backgroundColor: "#17171B", border: "1px solid rgba(255,255,255,0.1)", color: "#F4F4F5", left: `${((hover + 0.5) / data.length) * 100}%`, top: 0, transform: "translate(-50%, -110%)", whiteSpace: "nowrap" }}>
-          <div style={{ color: "#8B8B93" }}>{data[hover].mes}</div>
+        <div className="absolute pointer-events-none rounded-md px-2.5 py-1.5 text-xs" style={{ backgroundColor: "var(--header-bg)", border: "1px solid var(--hover-bg-soft)", color: "var(--ink)", left: `${((hover + 0.5) / data.length) * 100}%`, top: 0, transform: "translate(-50%, -110%)", whiteSpace: "nowrap" }}>
+          <div style={{ color: "var(--ink-muted)" }}>{data[hover].mes}</div>
           <div className="font-semibold">{data[hover].total} leads</div>
         </div>
       )}
@@ -131,11 +131,11 @@ export default function VisaoComercial() {
     return Math.round(somaDias / ganhos.length);
   }, [leads]);
 
-  if (!loaded) return <div style={{ color: "#8B8B93" }} className="text-sm py-16 text-center">Carregando visão comercial...</div>;
+  if (!loaded) return <div style={{ color: "var(--ink-muted)" }} className="text-sm py-16 text-center">Carregando visão comercial...</div>;
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-5" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>
+      <h1 className="text-2xl font-semibold mb-5" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>
         Visão geral <span style={{ color: "#8B5CF6" }}>comercial</span>
       </h1>
 
@@ -148,8 +148,8 @@ export default function VisaoComercial() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        <div className="rounded-2xl p-4" style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}>
-          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "#8B8B93" }}>Temperatura da carteira ativa ({ativos.length})</div>
+        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
+          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "var(--ink-muted)" }}>Temperatura da carteira ativa ({ativos.length})</div>
           <div className="flex flex-col gap-3">
             <BarraHorizontal label="Quente" valor={quentes} total={ativos.length} cor={TEMP_COLOR.quente} />
             <BarraHorizontal label="Morno" valor={mornos} total={ativos.length} cor={TEMP_COLOR.morno} />
@@ -157,31 +157,31 @@ export default function VisaoComercial() {
           </div>
         </div>
 
-        <div className="rounded-2xl p-4" style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}>
-          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "#8B8B93" }}>Onde o funil está agora</div>
+        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
+          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "var(--ink-muted)" }}>Onde o funil está agora</div>
           <div className="flex flex-col gap-3">
             {porEtapa.map((e) => <BarraHorizontal key={e.id} label={e.label} valor={e.valor} total={e.total} cor="#8B5CF6" />)}
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}>
-        <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "#8B8B93" }}>Leads entrados · últimos 6 meses</div>
+      <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
+        <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "var(--ink-muted)" }}>Leads entrados · últimos 6 meses</div>
         <LeadsPorMesChart data={leadsPorMes} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl p-4" style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}>
-          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "#8B8B93" }}>Clientes fechados por origem</div>
+        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
+          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "var(--ink-muted)" }}>Clientes fechados por origem</div>
           {porOrigem.length === 0
-            ? <div className="text-xs py-4 text-center" style={{ color: "#55555C" }}>Nenhum fechamento ainda</div>
+            ? <div className="text-xs py-4 text-center" style={{ color: "var(--ink-faint)" }}>Nenhum fechamento ainda</div>
             : <div className="flex flex-col gap-3">{porOrigem.map((o) => <BarraHorizontal key={o.id} label={o.label} valor={o.valor} total={o.total} cor="#22C55E" />)}</div>}
         </div>
 
-        <div className="rounded-2xl p-4" style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}>
-          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "#8B8B93" }}>Por que o funil vaza</div>
+        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
+          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "var(--ink-muted)" }}>Por que o funil vaza</div>
           {motivosPerda.length === 0
-            ? <div className="text-xs py-4 text-center" style={{ color: "#55555C" }}>Nenhuma perda registrada ainda</div>
+            ? <div className="text-xs py-4 text-center" style={{ color: "var(--ink-faint)" }}>Nenhuma perda registrada ainda</div>
             : <div className="flex flex-col gap-3">{motivosPerda.map((m) => <BarraHorizontal key={m.label} label={m.label} valor={m.valor} total={m.total} cor="#E11D2E" />)}</div>}
         </div>
       </div>

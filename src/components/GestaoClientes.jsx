@@ -132,7 +132,7 @@ function Badge({ color, children }) {
 function Field({ label, children }) {
   return (
     <label className="flex flex-col gap-1 text-xs">
-      <span className="uppercase tracking-wide" style={{ color: "#8B8B93", fontFamily: "Inter, sans-serif" }}>
+      <span className="uppercase tracking-wide" style={{ color: "var(--ink-muted)", fontFamily: "Inter, sans-serif" }}>
         {label}
       </span>
       {children}
@@ -155,10 +155,10 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
         : [...prev.plataformas, p],
     }));
 
-  const inputStyle = { border: "1px solid #2A2A2E", color: "#F4F4F5" };
+  const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "rgba(17,17,20,0.75)", backdropFilter: "blur(6px)" }}>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)", backdropFilter: "blur(6px)" }}>
       <Field label="Nome do cliente">
         <input className={inputCls} style={inputStyle} value={local.nome} onChange={(e) => set("nome", e.target.value)} placeholder="Ex: Clínica Vitalis" />
       </Field>
@@ -174,9 +174,9 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
               onClick={() => togglePlataforma(p)}
               className="rounded-md px-3 py-1.5 text-sm"
               style={{
-                border: "1px solid #2A2A2E",
+                border: "1px solid var(--border)",
                 backgroundColor: local.plataformas.includes(p) ? PURPLE + "22" : "transparent",
-                color: local.plataformas.includes(p) ? PURPLE : "#8B8B93",
+                color: local.plataformas.includes(p) ? PURPLE : "var(--ink-muted)",
               }}
             >
               {p}
@@ -269,7 +269,7 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
           )}
         </div>
         <div className="flex gap-2">
-          <button onClick={onCancel} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "#8B8B93", border: "1px solid #2A2A2E" }}>
+          <button onClick={onCancel} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}>
             Cancelar
           </button>
           <button
@@ -290,43 +290,43 @@ function StatCard({ label, value, sub, icon: Icon, accent }) {
   return (
     <div
       className="rounded-2xl p-4 flex-1 min-w-[160px] transition-transform duration-200 hover:-translate-y-0.5"
-      style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}
+      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase tracking-wide" style={{ color: "#8B8B93" }}>{label}</span>
+        <span className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{label}</span>
         {Icon && (
-          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: (accent || "#8B8B93") + "1A" }}>
-            <Icon size={14} style={{ color: accent || "#8B8B93" }} />
+          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: accent ? accent + "1A" : "color-mix(in srgb, var(--ink-muted) 10%, transparent)" }}>
+            <Icon size={14} style={{ color: accent || "var(--ink-muted)" }} />
           </span>
         )}
       </div>
-      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>{value}</div>
-      {sub && <div className="text-xs mt-1" style={{ color: "#8B8B93" }}>{sub}</div>}
+      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{value}</div>
+      {sub && <div className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>{sub}</div>}
     </div>
   );
 }
 
 function ConfirmModal({ nome, mesRefInicial, loading, onConfirm, onCancel }) {
   const [mesFim, setMesFim] = useState(mesRefInicial);
-  const inputStyle = { border: "1px solid #2A2A2E", color: "#F4F4F5" };
+  const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
+      style={{ backgroundColor: "var(--modal-overlay)" }}
       onClick={onCancel}
     >
       <div
         className="w-full max-w-sm rounded-2xl p-5"
-        style={{ backgroundColor: "#141417", border: "1px solid #2A2A2E" }}
+        style={{ backgroundColor: "var(--dropdown-bg)", border: "1px solid var(--border)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2 mb-2">
           <Ban size={16} style={{ color: "#E11D2E" }} />
-          <div className="text-sm font-semibold" style={{ color: "#F4F4F5" }}>Cancelar contrato</div>
+          <div className="text-sm font-semibold" style={{ color: "var(--ink)" }}>Cancelar contrato</div>
         </div>
-        <div className="text-xs mb-4" style={{ color: "#8B8B93" }}>
-          <strong style={{ color: "#F4F4F5" }}>{nome || "Este cliente"}</strong> continua aparecendo normalmente
+        <div className="text-xs mb-4" style={{ color: "var(--ink-muted)" }}>
+          <strong style={{ color: "var(--ink)" }}>{nome || "Este cliente"}</strong> continua aparecendo normalmente
           até o último mês ativo escolhido abaixo — some da carteira só a partir do mês seguinte. Histórico de
           meses anteriores nunca é afetado.
         </div>
@@ -344,7 +344,7 @@ function ConfirmModal({ nome, mesRefInicial, loading, onConfirm, onCancel }) {
             onClick={onCancel}
             disabled={loading}
             className="text-xs px-3 py-2 rounded-md disabled:opacity-50"
-            style={{ color: "#8B8B93", border: "1px solid #2A2A2E" }}
+            style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}
           >
             Voltar
           </button>
@@ -372,16 +372,16 @@ function SaudeCard({ positivos, neutros, criticos }) {
   return (
     <div
       className="rounded-2xl p-4 flex-1 min-w-[200px] transition-transform duration-200 hover:-translate-y-0.5"
-      style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}
+      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
     >
-      <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "#8B8B93" }}>Saúde da carteira</div>
-      <div className="text-2xl font-semibold mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>{score}%</div>
-      <div className="flex h-1.5 rounded-full overflow-hidden mb-2" style={{ backgroundColor: "#232327" }}>
+      <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "var(--ink-muted)" }}>Saúde da carteira</div>
+      <div className="text-2xl font-semibold mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{score}%</div>
+      <div className="flex h-1.5 rounded-full overflow-hidden mb-2" style={{ backgroundColor: "var(--track-bg)" }}>
         {pPos > 0 && <div style={{ width: `${pPos}%`, backgroundColor: "#22C55E" }} />}
         {pNeu > 0 && <div style={{ width: `${pNeu}%`, backgroundColor: "#EAB308" }} />}
         {pRisco > 0 && <div style={{ width: `${pRisco}%`, backgroundColor: "#E11D2E" }} />}
       </div>
-      <div className="text-xs" style={{ color: "#8B8B93" }}>{positivos} positivos · {neutros} neutros · {criticos} críticos</div>
+      <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{positivos} positivos · {neutros} neutros · {criticos} críticos</div>
     </div>
   );
 }
@@ -667,13 +667,13 @@ export default function GestaoClientes() {
   const criticos = clientes.filter((c) => c.status_saude === "risco").length;
 
   if (!loaded) {
-    return <div style={{ color: "#8B8B93" }} className="text-sm py-16 text-center">Carregando carteira de clientes...</div>;
+    return <div style={{ color: "var(--ink-muted)" }} className="text-sm py-16 text-center">Carregando carteira de clientes...</div>;
   }
 
   return (
     <div>
       <div className="flex items-start justify-between mb-3">
-        <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>
+        <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>
           Clientes{" "}
           <span style={{ background: `linear-gradient(90deg, ${PURPLE_LIGHT}, ${PURPLE})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
             ativos
@@ -695,7 +695,7 @@ export default function GestaoClientes() {
       </div>
 
       {!mesEhAtual && (
-        <div className="text-xs mb-4" style={{ color: "#8B8B93" }}>
+        <div className="text-xs mb-4" style={{ color: "var(--ink-muted)" }}>
           Visualizando histórico de {mesLabel} — inclui clientes com contrato já cancelado.
         </div>
       )}
@@ -723,50 +723,50 @@ export default function GestaoClientes() {
             onClick={() => setFiltro(f.id)}
             className="px-3 py-1.5 rounded-full transition-colors"
             style={{
-              border: "1px solid #2A2A2E",
+              border: "1px solid var(--border)",
               backgroundColor: filtro === f.id ? PURPLE : "transparent",
-              color: filtro === f.id ? "#fff" : "#8B8B93",
+              color: filtro === f.id ? "#fff" : "var(--ink-muted)",
             }}
-            onMouseEnter={(e) => { if (filtro !== f.id) e.currentTarget.style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+            onMouseEnter={(e) => { if (filtro !== f.id) e.currentTarget.style.backgroundColor = "var(--hover-bg)"; }}
             onMouseLeave={(e) => { if (filtro !== f.id) e.currentTarget.style.backgroundColor = "transparent"; }}
           >
             {f.label}
           </button>
         ))}
 
-        <div className="flex items-center gap-1.5 ml-auto rounded-md px-2.5 py-1.5" style={{ border: "1px solid #2A2A2E" }}>
-          <Search size={13} style={{ color: "#8B8B93" }} />
+        <div className="flex items-center gap-1.5 ml-auto rounded-md px-2.5 py-1.5" style={{ border: "1px solid var(--border)" }}>
+          <Search size={13} style={{ color: "var(--ink-muted)" }} />
           <input
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
             placeholder="Buscar por nome..."
             className="bg-transparent outline-none text-xs w-36"
-            style={{ color: "#F4F4F5" }}
+            style={{ color: "var(--ink)" }}
           />
         </div>
         <select
           value={ordenacao}
           onChange={(e) => setOrdenacao(e.target.value)}
           className="rounded-md px-2.5 py-1.5 text-xs bg-transparent outline-none"
-          style={{ border: "1px solid #2A2A2E", color: "#8B8B93" }}
+          style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }}
         >
-          <option value="risco" style={{ backgroundColor: "#141417" }}>Ordenar: Risco</option>
-          <option value="nome" style={{ backgroundColor: "#141417" }}>Ordenar: Nome</option>
-          <option value="valor" style={{ backgroundColor: "#141417" }}>Ordenar: Valor mensal</option>
-          <option value="pagamento" style={{ backgroundColor: "#141417" }}>Ordenar: Pagamento</option>
-          <option value="renovacao" style={{ backgroundColor: "#141417" }}>Ordenar: Renovação</option>
+          <option value="risco" style={{ backgroundColor: "var(--dropdown-bg)" }}>Ordenar: Risco</option>
+          <option value="nome" style={{ backgroundColor: "var(--dropdown-bg)" }}>Ordenar: Nome</option>
+          <option value="valor" style={{ backgroundColor: "var(--dropdown-bg)" }}>Ordenar: Valor mensal</option>
+          <option value="pagamento" style={{ backgroundColor: "var(--dropdown-bg)" }}>Ordenar: Pagamento</option>
+          <option value="renovacao" style={{ backgroundColor: "var(--dropdown-bg)" }}>Ordenar: Renovação</option>
         </select>
       </div>
 
       {novoAberto && (
-        <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid #2A2A2E" }}>
-          <div className="px-5 py-3 text-sm font-medium" style={{ backgroundColor: "#17171B", color: "#F4F4F5", borderBottom: `1px solid ${PURPLE}33` }}>Novo cliente</div>
+        <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+          <div className="px-5 py-3 text-sm font-medium" style={{ backgroundColor: "var(--header-bg)", color: "var(--ink)", borderBottom: `1px solid ${PURPLE}33` }}>Novo cliente</div>
           <ClientForm client={emptyClient()} onSave={salvarCliente} onCancel={() => setNovoAberto(false)} onDelete={() => {}} isNew salvando={salvando} mesLabel={mesLabel} />
         </div>
       )}
 
       {ordenados.length === 0 && !novoAberto && (
-        <div className="text-sm text-center py-16" style={{ color: "#55555C" }}>
+        <div className="text-sm text-center py-16" style={{ color: "var(--ink-faint)" }}>
           {clientes.length === 0
             ? 'Nenhum cliente cadastrado ainda. Clique em "Novo cliente" para começar.'
             : "Nenhum cliente encontrado com esse filtro ou busca."}
@@ -793,8 +793,8 @@ export default function GestaoClientes() {
                 <div className="flex items-center gap-4 flex-wrap">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: risco.border }} />
                   <div>
-                    <div className="text-sm font-semibold" style={{ color: "#F4F4F5" }}>{c.nome || "Sem nome"}</div>
-                    <div className="text-xs" style={{ color: "#8B8B93" }}>{c.nicho || "Nicho não definido"} · {fmtMoney(c.valor_mensal)}/mês</div>
+                    <div className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{c.nome || "Sem nome"}</div>
+                    <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{c.nicho || "Nicho não definido"} · {fmtMoney(c.valor_mensal)}/mês</div>
                   </div>
                   <select
                     value={c.status_saude}
@@ -806,7 +806,7 @@ export default function GestaoClientes() {
                     style={{ backgroundColor: SAUDE_COLOR[c.status_saude] + "22", color: SAUDE_COLOR[c.status_saude], border: "none" }}
                   >
                     {Object.entries(SAUDE_LABEL).map(([value, label]) => (
-                      <option key={value} value={value} style={{ backgroundColor: "#141417", color: "#F4F4F5" }}>
+                      <option key={value} value={value} style={{ backgroundColor: "var(--dropdown-bg)", color: "var(--ink)" }}>
                         {label}
                       </option>
                     ))}
@@ -817,7 +817,7 @@ export default function GestaoClientes() {
                   {c.data_fim_contrato && (
                     <Badge color="#E11D2E">Encerra {labelMes(mesDaData(c.data_fim_contrato))}</Badge>
                   )}
-                  <span className="hidden md:flex items-center gap-1 text-xs" style={{ color: "#8B8B93" }}>
+                  <span className="hidden md:flex items-center gap-1 text-xs" style={{ color: "var(--ink-muted)" }}>
                     {c.tendencia === "subindo" && <TrendingUp size={14} style={{ color: "#22C55E" }} />}
                     {c.tendencia === "caindo" && <TrendingDown size={14} style={{ color: "#E11D2E" }} />}
                     {c.tendencia === "estavel" && <Minus size={14} />}
@@ -836,7 +836,7 @@ export default function GestaoClientes() {
                       title={c.status_pagamento_mes === "pago" ? "Marcar como pendente" : "Marcar como pago"}
                     />
                   </div>
-                  {aberto ? <ChevronUp size={18} color="#8B8B93" /> : <ChevronDown size={18} color="#8B8B93" />}
+                  {aberto ? <ChevronUp size={18} color="var(--ink-muted)" /> : <ChevronDown size={18} color="var(--ink-muted)" />}
                 </div>
               </div>
               {aberto && (

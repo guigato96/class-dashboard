@@ -1,5 +1,56 @@
 @import "tailwindcss";
 
+:root {
+  --bg: #07070B;
+  --card-bg: rgba(20, 20, 23, 0.7);
+  --card-bg-soft: rgba(20, 20, 23, 0.5);
+  --panel-bg: rgba(17, 17, 20, 0.75);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --ink: #F4F4F5;
+  --ink-muted: #8B8B93;
+  --ink-faint: #55555C;
+  --border: #2A2A2E;
+  --dropdown-bg: #141417;
+  --header-bg: #17171B;
+  --subtle-bg: #1B1B20;
+  --track-bg: #232327;
+  --track-off: #3A3A3F;
+  --hover-bg: rgba(255, 255, 255, 0.05);
+  --hover-bg-soft: rgba(255, 255, 255, 0.1);
+  --modal-overlay: rgba(0, 0, 0, 0.6);
+  --glow-purple: rgba(139, 92, 246, 0.16);
+  --sidebar-bg: rgba(10, 10, 13, 0.5);
+  --chip-bg: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] {
+  --bg: #F5F4F9;
+  --card-bg: rgba(255, 255, 255, 0.75);
+  --card-bg-soft: rgba(255, 255, 255, 0.55);
+  --panel-bg: rgba(248, 247, 251, 0.92);
+  --card-border: rgba(23, 20, 32, 0.08);
+  --ink: #18151F;
+  --ink-muted: #6B6675;
+  --ink-faint: #A29CB0;
+  --border: #E3E0EA;
+  --dropdown-bg: #FFFFFF;
+  --header-bg: #EDEBF3;
+  --subtle-bg: #F0EEF5;
+  --track-bg: #E3E0EA;
+  --track-off: #D2CDDC;
+  --hover-bg: rgba(23, 20, 32, 0.04);
+  --hover-bg-soft: rgba(23, 20, 32, 0.06);
+  --modal-overlay: rgba(23, 20, 32, 0.45);
+  --glow-purple: rgba(139, 92, 246, 0.1);
+  --sidebar-bg: rgba(255, 255, 255, 0.6);
+  --chip-bg: rgba(23, 20, 32, 0.03);
+}
+
 body {
   margin: 0;
+  background: var(--bg);
+}
+
+[data-theme="light"] .app-logo {
+  filter: brightness(0);
 }

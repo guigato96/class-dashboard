@@ -15,7 +15,7 @@ function Delta({ atual, anterior, invertido }) {
   const subiu = pct > 0.5;
   const desceu = pct < -0.5;
   const positivo = invertido ? !subiu : !desceu;
-  const cor = subiu || desceu ? (positivo ? "#22C55E" : "#E11D2E") : "#8B8B93";
+  const cor = subiu || desceu ? (positivo ? "#22C55E" : "#E11D2E") : "var(--ink-muted)";
   const Icon = subiu ? TrendingUp : desceu ? TrendingDown : Minus;
   const sinal = pct > 0 ? "+" : "";
 
@@ -31,18 +31,18 @@ function StatCard({ label, value, sub, icon: Icon, accent, delta }) {
   return (
     <div
       className="rounded-2xl p-4 flex-1 min-w-[160px] transition-transform duration-200 hover:-translate-y-0.5"
-      style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}
+      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase tracking-wide" style={{ color: "#8B8B93" }}>{label}</span>
+        <span className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{label}</span>
         {Icon && (
-          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: (accent || "#8B8B93") + "1A" }}>
-            <Icon size={14} style={{ color: accent || "#8B8B93" }} />
+          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: accent ? accent + "1A" : "color-mix(in srgb, var(--ink-muted) 10%, transparent)" }}>
+            <Icon size={14} style={{ color: accent || "var(--ink-muted)" }} />
           </span>
         )}
       </div>
-      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>{value}</div>
-      {sub && <div className="text-xs mt-1" style={{ color: "#8B8B93" }}>{sub}</div>}
+      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{value}</div>
+      {sub && <div className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>{sub}</div>}
       {delta}
     </div>
   );
@@ -119,12 +119,12 @@ export default function Dashboard() {
   const lucroAnterior = receitaMesAnterior - despesaMesAnterior;
 
   if (!loaded) {
-    return <div style={{ color: "#8B8B93" }} className="text-sm py-16 text-center">Carregando painel...</div>;
+    return <div style={{ color: "var(--ink-muted)" }} className="text-sm py-16 text-center">Carregando painel...</div>;
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-5" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>
+      <h1 className="text-2xl font-semibold mb-5" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>
         Visão geral
       </h1>
 
@@ -161,9 +161,9 @@ export default function Dashboard() {
 
       <div
         className="rounded-2xl p-4"
-        style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}
+        style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
       >
-        <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "#8B8B93" }}>Receita x Despesa · últimos 6 meses</div>
+        <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "var(--ink-muted)" }}>Receita x Despesa · últimos 6 meses</div>
         <OverviewChart data={historicoMensal} />
       </div>
     </div>

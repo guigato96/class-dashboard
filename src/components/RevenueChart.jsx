@@ -38,10 +38,10 @@ export default function RevenueChart({ data }) {
               x2={width - 8}
               y1={yFor(t)}
               y2={yFor(t)}
-              stroke="rgba(255,255,255,0.08)"
+              stroke="var(--card-border)"
               strokeWidth="1"
             />
-            <text x={padLeft - 8} y={yFor(t) + 3} textAnchor="end" fontSize="9" fill="#8B8B93" fontFamily="Inter, sans-serif">
+            <text x={padLeft - 8} y={yFor(t) + 3} textAnchor="end" fontSize="9" fill="var(--ink-muted)" fontFamily="Inter, sans-serif">
               {fmtMoneyShort(t)}
             </text>
           </g>
@@ -71,11 +71,11 @@ export default function RevenueChart({ data }) {
                 opacity={isHover || isLast ? 1 : 0.65}
               />
               {isLast && d.total > 0 && (
-                <text x={x + barW / 2} y={y - 6} textAnchor="middle" fontSize="10" fontWeight="600" fill="#F4F4F5" fontFamily="'Space Grotesk', sans-serif">
+                <text x={x + barW / 2} y={y - 6} textAnchor="middle" fontSize="10" fontWeight="600" fill="var(--ink)" fontFamily="'Space Grotesk', sans-serif">
                   {fmtMoneyShort(d.total)}
                 </text>
               )}
-              <text x={x + barW / 2} y={height - 8} textAnchor="middle" fontSize="10" fill="#8B8B93" fontFamily="Inter, sans-serif">
+              <text x={x + barW / 2} y={height - 8} textAnchor="middle" fontSize="10" fill="var(--ink-muted)" fontFamily="Inter, sans-serif">
                 {d.mes}
               </text>
             </g>
@@ -87,16 +87,16 @@ export default function RevenueChart({ data }) {
         <div
           className="absolute pointer-events-none rounded-md px-2.5 py-1.5 text-xs"
           style={{
-            backgroundColor: "#17171B",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#F4F4F5",
+            backgroundColor: "var(--header-bg)",
+            border: "1px solid var(--hover-bg-soft)",
+            color: "var(--ink)",
             left: `${((hoverIndex + 0.5) / data.length) * 100}%`,
             top: 0,
             transform: "translate(-50%, -110%)",
             whiteSpace: "nowrap",
           }}
         >
-          <div style={{ color: "#8B8B93" }}>{data[hoverIndex].mes}</div>
+          <div style={{ color: "var(--ink-muted)" }}>{data[hoverIndex].mes}</div>
           <div className="font-semibold">{fmtMoneyShort(data[hoverIndex].total)}</div>
         </div>
       )}

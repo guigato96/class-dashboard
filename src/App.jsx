@@ -8,10 +8,12 @@ import EntradasExtras from "./components/EntradasExtras";
 import Despesas from "./components/Despesas";
 import Funil from "./components/Funil";
 import VisaoComercial from "./components/VisaoComercial";
+import { useTheme } from "./components/ui";
 
 export default function App() {
   const [session, setSession] = useState(undefined);
   const [aba, setAba] = useState("dashboard");
+  const [theme, toggleTheme] = useTheme();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -23,7 +25,7 @@ export default function App() {
 
   if (session === undefined) {
     return (
-      <div style={{ backgroundColor: "#07070B", minHeight: "100vh", color: "#8B8B93" }} className="flex items-center justify-center text-sm">
+      <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", color: "var(--ink-muted)" }} className="flex items-center justify-center text-sm">
         Carregando...
       </div>
     );
@@ -34,7 +36,7 @@ export default function App() {
   }
 
   return (
-    <Layout aba={aba} onAbaChange={setAba} onSignOut={() => supabase.auth.signOut()}>
+    <Layout aba={aba} onAbaChange={setAba} onSignOut={() => supabase.auth.signOut()} theme={theme} onToggleTheme={toggleTheme}>
       {aba === "dashboard" && <Dashboard />}
       {aba === "funil" && <Funil />}
       {aba === "comercial" && <VisaoComercial />}

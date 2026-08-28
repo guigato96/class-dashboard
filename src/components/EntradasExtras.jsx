@@ -52,7 +52,7 @@ function buildPayload(e) {
 function Field({ label, children }) {
   return (
     <label className="flex flex-col gap-1 text-xs">
-      <span className="uppercase tracking-wide" style={{ color: "#8B8B93" }}>{label}</span>
+      <span className="uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{label}</span>
       {children}
     </label>
   );
@@ -64,37 +64,37 @@ function StatCard({ label, value, icon: Icon, accent }) {
   return (
     <div
       className="rounded-2xl p-4 flex-1 min-w-[160px] transition-transform duration-200 hover:-translate-y-0.5"
-      style={{ backgroundColor: "rgba(20,20,23,0.7)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(6px)" }}
+      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase tracking-wide" style={{ color: "#8B8B93" }}>{label}</span>
+        <span className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{label}</span>
         {Icon && (
-          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: (accent || "#8B8B93") + "1A" }}>
-            <Icon size={14} style={{ color: accent || "#8B8B93" }} />
+          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: accent ? accent + "1A" : "color-mix(in srgb, var(--ink-muted) 10%, transparent)" }}>
+            <Icon size={14} style={{ color: accent || "var(--ink-muted)" }} />
           </span>
         )}
       </div>
-      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>{value}</div>
+      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{value}</div>
     </div>
   );
 }
 
 function MonthNav({ mesRef, onChange }) {
   return (
-    <div className="inline-flex items-center gap-1 rounded-full px-1.5 py-1" style={{ border: "1px solid #2A2A2E" }}>
+    <div className="inline-flex items-center gap-1 rounded-full px-1.5 py-1" style={{ border: "1px solid var(--border)" }}>
       <button
         onClick={() => onChange(addMeses(mesRef, -1))}
-        className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-white/5"
-        style={{ color: "#8B8B93" }}
+        className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-[var(--hover-bg)]"
+        style={{ color: "var(--ink-muted)" }}
         title="Mês anterior"
       >
         <ChevronLeft size={14} />
       </button>
-      <span className="text-xs font-medium px-2" style={{ color: "#F4F4F5" }}>{labelMes(mesRef)}</span>
+      <span className="text-xs font-medium px-2" style={{ color: "var(--ink)" }}>{labelMes(mesRef)}</span>
       <button
         onClick={() => onChange(addMeses(mesRef, 1))}
-        className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-white/5"
-        style={{ color: "#8B8B93" }}
+        className="flex items-center justify-center rounded-full p-1 transition-colors hover:bg-[var(--hover-bg)]"
+        style={{ color: "var(--ink-muted)" }}
         title="Próximo mês"
       >
         <ChevronRight size={14} />
@@ -108,10 +108,10 @@ function EntradaForm({ entrada, onSave, onDelete, onCancel, isNew, salvando }) {
   useEffect(() => setLocal(entrada), [entrada.id]);
 
   const set = (field, value) => setLocal((prev) => ({ ...prev, [field]: value }));
-  const inputStyle = { border: "1px solid #2A2A2E", color: "#F4F4F5" };
+  const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "rgba(17,17,20,0.75)", backdropFilter: "blur(6px)" }}>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)", backdropFilter: "blur(6px)" }}>
       <div className="col-span-2 md:col-span-3">
         <Field label="Descrição">
           <input className={inputCls} style={inputStyle} value={local.descricao} onChange={(e) => set("descricao", e.target.value)} placeholder="Ex: Venda de página para Clínica X" />
@@ -169,7 +169,7 @@ function EntradaForm({ entrada, onSave, onDelete, onCancel, isNew, salvando }) {
           )}
         </div>
         <div className="flex gap-2">
-          <button onClick={onCancel} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "#8B8B93", border: "1px solid #2A2A2E" }}>
+          <button onClick={onCancel} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}>
             Cancelar
           </button>
           <button
@@ -295,7 +295,7 @@ export default function EntradasExtras() {
   return (
     <div>
       <div className="flex items-start justify-between mb-3">
-        <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#F4F4F5" }}>
+        <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>
           Entradas extras
         </h1>
         <button
@@ -314,7 +314,7 @@ export default function EntradasExtras() {
       {erro && <div className="text-xs mb-3" style={{ color: "#E11D2E" }}>{erro}</div>}
 
       {!loaded ? (
-        <div style={{ color: "#8B8B93" }} className="text-sm py-16 text-center">Carregando entradas extras...</div>
+        <div style={{ color: "var(--ink-muted)" }} className="text-sm py-16 text-center">Carregando entradas extras...</div>
       ) : (
         <>
           <div className="flex flex-wrap gap-3 mb-6">
@@ -324,14 +324,14 @@ export default function EntradasExtras() {
           </div>
 
           {novoAberto && (
-            <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid #2A2A2E" }}>
-              <div className="px-5 py-3 text-sm font-medium" style={{ backgroundColor: "#17171B", color: "#F4F4F5", borderBottom: `1px solid ${PURPLE}33` }}>Nova entrada</div>
+            <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+              <div className="px-5 py-3 text-sm font-medium" style={{ backgroundColor: "var(--header-bg)", color: "var(--ink)", borderBottom: `1px solid ${PURPLE}33` }}>Nova entrada</div>
               <EntradaForm entrada={emptyEntrada(mesRef)} onSave={salvarEntrada} onCancel={() => setNovoAberto(false)} onDelete={() => {}} isNew salvando={salvando} />
             </div>
           )}
 
           {ordenadas.length === 0 && !novoAberto && (
-            <div className="text-sm text-center py-16" style={{ color: "#55555C" }}>
+            <div className="text-sm text-center py-16" style={{ color: "var(--ink-faint)" }}>
               Nenhuma entrada extra em {labelMes(mesRef)}. Clique em "Nova entrada" para começar.
             </div>
           )}
@@ -356,8 +356,8 @@ export default function EntradasExtras() {
                     <div className="flex items-center gap-4 flex-wrap">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: corStatus }} />
                       <div>
-                        <div className="text-sm font-semibold" style={{ color: "#F4F4F5" }}>{e.descricao || "Sem descrição"}</div>
-                        <div className="text-xs" style={{ color: "#8B8B93" }}>{e.categoria} · {fmtMoney(e.valor)} · {fmtDate(e.data_entrada)}</div>
+                        <div className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{e.descricao || "Sem descrição"}</div>
+                        <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{e.categoria} · {fmtMoney(e.valor)} · {fmtDate(e.data_entrada)}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -370,7 +370,7 @@ export default function EntradasExtras() {
                           title={e.recebido ? "Marcar como pendente" : "Marcar como recebido"}
                         />
                       </div>
-                      {aberto ? <ChevronUp size={18} color="#8B8B93" /> : <ChevronDown size={18} color="#8B8B93" />}
+                      {aberto ? <ChevronUp size={18} color="var(--ink-muted)" /> : <ChevronDown size={18} color="var(--ink-muted)" />}
                     </div>
                   </div>
                   {aberto && (

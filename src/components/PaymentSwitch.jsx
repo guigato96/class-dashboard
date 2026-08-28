@@ -8,7 +8,7 @@ export default function PaymentSwitch({ checked, onChange, disabled, title }) {
       disabled={disabled}
       title={title}
       className="relative inline-flex items-center shrink-0 rounded-full transition-colors duration-300 ease-in-out disabled:opacity-50 active:scale-95"
-      style={{ width: 34, height: 20, backgroundColor: checked ? "#22C55E" : "#3A3A3F", transitionProperty: "background-color, transform" }}
+      style={{ width: 34, height: 20, backgroundColor: checked ? "#22C55E" : "var(--track-off)", transitionProperty: "background-color, transform" }}
     >
       <span
         className="inline-block rounded-full bg-white transition-transform duration-300 ease-in-out"

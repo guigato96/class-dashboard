@@ -32,10 +32,10 @@ export default function OverviewChart({ data }) {
   return (
     <div className="relative">
       <div className="flex items-center gap-4 mb-2">
-        <span className="flex items-center gap-1.5 text-xs" style={{ color: "#8B8B93" }}>
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--ink-muted)" }}>
           <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: RECEITA_COLOR }} /> Receita
         </span>
-        <span className="flex items-center gap-1.5 text-xs" style={{ color: "#8B8B93" }}>
+        <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--ink-muted)" }}>
           <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: DESPESA_COLOR }} /> Despesa
         </span>
       </div>
@@ -43,8 +43,8 @@ export default function OverviewChart({ data }) {
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ overflow: "visible" }}>
         {ticks.map((t, i) => (
           <g key={i}>
-            <line x1={padLeft} x2={width - 8} y1={yFor(t)} y2={yFor(t)} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
-            <text x={padLeft - 8} y={yFor(t) + 3} textAnchor="end" fontSize="9" fill="#8B8B93" fontFamily="Inter, sans-serif">
+            <line x1={padLeft} x2={width - 8} y1={yFor(t)} y2={yFor(t)} stroke="var(--card-border)" strokeWidth="1" />
+            <text x={padLeft - 8} y={yFor(t) + 3} textAnchor="end" fontSize="9" fill="var(--ink-muted)" fontFamily="Inter, sans-serif">
               {fmtMoneyShort(t)}
             </text>
           </g>
@@ -68,7 +68,7 @@ export default function OverviewChart({ data }) {
               <rect x={cx - bandW / 2} y={padTop} width={bandW} height={plotH} fill="transparent" />
               <rect x={xR} y={padTop + plotH - Math.max(hR, 1)} width={barW} height={Math.max(hR, 1)} rx="3" fill={RECEITA_COLOR} opacity={isHover ? 1 : 0.85} />
               <rect x={xD} y={padTop + plotH - Math.max(hD, 1)} width={barW} height={Math.max(hD, 1)} rx="3" fill={DESPESA_COLOR} opacity={isHover ? 1 : 0.85} />
-              <text x={cx} y={height - 8} textAnchor="middle" fontSize="10" fill="#8B8B93" fontFamily="Inter, sans-serif">
+              <text x={cx} y={height - 8} textAnchor="middle" fontSize="10" fill="var(--ink-muted)" fontFamily="Inter, sans-serif">
                 {d.mes}
               </text>
             </g>
@@ -80,16 +80,16 @@ export default function OverviewChart({ data }) {
         <div
           className="absolute pointer-events-none rounded-md px-2.5 py-1.5 text-xs"
           style={{
-            backgroundColor: "#17171B",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "#F4F4F5",
+            backgroundColor: "var(--header-bg)",
+            border: "1px solid var(--hover-bg-soft)",
+            color: "var(--ink)",
             left: `${((hover + 0.5) / data.length) * 100}%`,
             top: 0,
             transform: "translate(-50%, -110%)",
             whiteSpace: "nowrap",
           }}
         >
-          <div style={{ color: "#8B8B93" }}>{data[hover].mes}</div>
+          <div style={{ color: "var(--ink-muted)" }}>{data[hover].mes}</div>
           <div>
             <span style={{ color: RECEITA_COLOR }}>●</span> {fmtMoneyShort(data[hover].receita)}
           </div>

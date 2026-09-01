@@ -45,8 +45,8 @@ function alertaLead(lead, hoje) {
 }
 
 const ALERTA_STYLE = {
-  vermelho: { border: "#E11D2E", bg: "rgba(225,29,46,0.10)" },
-  amarelo: { border: "#EAB308", bg: "rgba(234,179,8,0.08)" },
+  vermelho: { border: "#E11D2E", bg: "var(--card-bg)" },
+  amarelo: { border: "#EAB308", bg: "var(--card-bg)" },
   verde: { border: "#22C55E", bg: "var(--card-bg)" },
   neutro: { border: "#3B3448", bg: "var(--card-bg-soft)" },
 };
@@ -430,6 +430,18 @@ export default function Funil() {
     }
   };
 
+  const alterarTemperatura = async (leadId, novaTemp) => {
+    const lead = leads.find((l) => l.id === leadId);
+    if (!lead || lead.temperatura === novaTemp) return;
+    const anterior = lead.temperatura;
+    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, temperatura: novaTemp } : l)));
+    const { error } = await supabase.from("leads").update({ temperatura: novaTemp }).eq("id", leadId);
+    if (error) {
+      setErro("Erro ao atualizar temperatura: " + error.message);
+      setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, temperatura: anterior } : l)));
+    }
+  };
+
   const excluirLead = async (leadId) => {
     setSalvando(true);
     setErro("");
@@ -553,7 +565,20 @@ export default function Funil() {
                       <div className="text-sm font-medium mb-1" style={{ color: "var(--ink)" }}>{l.nome}</div>
                       <div className="text-xs mb-2" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <Badge color={TEMP_COLOR[l.temperatura]}>{TEMP_LABEL[l.temperatura]}</Badge>
+                        <select
+                          value={l.temperatura}
+                          draggable={false}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onChange={(e) => alterarTemperatura(l.id, e.target.value)}
+                          title="Mudar temperatura"
+                          className="text-xs font-medium rounded-full pl-2.5 pr-1.5 py-0.5 outline-none cursor-pointer appearance-none"
+                          style={{ backgroundColor: TEMP_COLOR[l.temperatura] + "22", color: TEMP_COLOR[l.temperatura], border: "none" }}
+                        >
+                          {Object.entries(TEMP_LABEL).map(([value, label]) => (
+                            <option key={value} value={value} style={{ backgroundColor: "var(--dropdown-bg)", color: "var(--ink)" }}>{label}</option>
+                          ))}
+                        </select>
                         {l.data_proxima_acao && <span className="text-xs flex items-center gap-1" style={{ color: "var(--ink-muted)" }}><Clock size={11} /> {new Date(l.data_proxima_acao + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>}
                       </div>
                     </div>

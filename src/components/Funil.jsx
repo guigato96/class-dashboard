@@ -345,7 +345,9 @@ export default function Funil() {
   const enriquecidos = useMemo(() => leads.map((l) => ({ ...l, _alerta: alertaLead(l, hoje) })), [leads, hoje]);
 
   const filtrados = useMemo(() => {
-    let lista = enriquecidos.filter((l) => l.etapa !== "ganho" && l.etapa !== "perdido");
+    let lista = filtro === "perdidos"
+      ? enriquecidos.filter((l) => l.etapa === "perdido")
+      : enriquecidos.filter((l) => l.etapa !== "ganho" && l.etapa !== "perdido");
     if (filtro === "atrasados") lista = lista.filter((l) => l._alerta === "vermelho");
     if (filtro === "quente") lista = lista.filter((l) => l.temperatura === "quente");
     if (busca.trim()) {
@@ -471,7 +473,7 @@ export default function Funil() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
-        {[{ id: "todos", label: "Todos" }, { id: "atrasados", label: "Atrasados" }, { id: "quente", label: "Quentes" }].map((f) => (
+        {[{ id: "todos", label: "Todos" }, { id: "atrasados", label: "Atrasados" }, { id: "quente", label: "Quentes" }, { id: "perdidos", label: "Perdidos" }].map((f) => (
           <button key={f.id} onClick={() => setFiltro(f.id)} className="px-3 py-1.5 rounded-full transition-colors"
             style={{ border: "1px solid var(--border)", backgroundColor: filtro === f.id ? PURPLE : "transparent", color: filtro === f.id ? "#fff" : "var(--ink-muted)" }}>
             {f.label}
@@ -483,6 +485,31 @@ export default function Funil() {
         </div>
       </div>
 
+      {filtro === "perdidos" && (
+        <div className="flex flex-col gap-2">
+          {filtrados.length === 0 && (
+            <div className="text-sm text-center py-16" style={{ color: "var(--ink-faint)" }}>Nenhum lead perdido ainda.</div>
+          )}
+          {filtrados.map((l) => (
+            <div key={l.id} onClick={() => abrirLead(l)}
+              className="rounded-xl p-3 cursor-pointer transition-transform duration-150 hover:-translate-y-0.5"
+              style={{ border: "1px solid #E11D2E33", borderLeft: "3px solid #E11D2E", backgroundColor: "rgba(225,29,46,0.06)" }}>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>{l.nome}</div>
+                  <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
+                </div>
+                <Badge color={TEMP_COLOR[l.temperatura]}>{TEMP_LABEL[l.temperatura]}</Badge>
+              </div>
+              {l.motivo_perda && (
+                <div className="text-xs mt-2" style={{ color: "var(--ink-muted)" }}>Motivo: <b style={{ color: "var(--ink)" }}>{l.motivo_perda}</b></div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {filtro !== "perdidos" && (
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(6, minmax(200px, 1fr))", overflowX: "auto" }}>
         {colunas.map((col) => {
           const emFoco = colunaSobre === col.id;
@@ -538,6 +565,7 @@ export default function Funil() {
           );
         })}
       </div>
+      )}
 
       {novoAberto && (
         <LeadModal lead={emptyLead()} isNew atividades={[]} onClose={() => setNovoAberto(false)} onSave={salvarLead} salvando={salvando}

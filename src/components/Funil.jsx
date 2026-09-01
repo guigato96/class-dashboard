@@ -522,11 +522,11 @@ export default function Funil() {
       )}
 
       {filtro !== "perdidos" && (
-      <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(6, minmax(200px, 1fr))", overflowX: "auto" }}>
+      <div className="flex gap-3 overflow-x-auto pb-2">
         {colunas.map((col) => {
           const emFoco = colunaSobre === col.id;
           return (
-            <div key={col.id} className="flex flex-col gap-2 min-w-[200px]">
+            <div key={col.id} className="flex flex-col gap-2 w-[240px] shrink-0">
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{col.label}</span>
                 <span className="text-xs" style={{ color: "var(--ink-faint)" }}>{col.leads.length}</span>

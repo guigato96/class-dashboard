@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Plus, X, Users, TrendingUp, AlertTriangle, Trophy, Search, Save,
-  Phone, Mail, Clock, MessageSquare, Ban, Check,
+  Phone, Mail, Clock, MessageSquare, Ban, Check, Trash2,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { PURPLE, PURPLE_LIGHT, fmtMoney, parseDate, diffDays, inputCls, inputStyle, Badge, Field, StatCard } from "./ui";
@@ -159,10 +159,10 @@ function ConversaoForm({ lead, dados, onChange }) {
   );
 }
 
-function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvando, onRegistrarAtividade, onConverter, onMarcarPerdido }) {
+function LeadModal({ lead, isNew, atividades, onClose, onSave, onExcluir, salvando, onRegistrarAtividade, onConverter, onMarcarPerdido }) {
   const [local, setLocal] = useState(lead);
   const [nota, setNota] = useState("");
-  const [modo, setModo] = useState("editar"); // editar | converter | perder
+  const [modo, setModo] = useState("editar"); // editar | converter | perder | excluir
   const [motivoPerda, setMotivoPerda] = useState("");
   const [conv, setConv] = useState(() => ({
     nome: lead.nome, nicho: lead.nicho || "", contato_nome: lead.contato_nome || "",
@@ -232,6 +232,13 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
                       </button>
                     </>
                   )}
+                  {!isNew && (
+                    <button onClick={() => setModo("excluir")} disabled={salvando}
+                      className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md"
+                      style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}>
+                      <Trash2 size={14} /> Excluir
+                    </button>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   <button onClick={onClose} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}>Cancelar</button>
@@ -274,6 +281,25 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onDelete, salvand
                   className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md disabled:opacity-50"
                   style={{ backgroundColor: "#E11D2E", color: "#fff" }}>
                   <Ban size={14} /> {salvando ? "Salvando..." : "Confirmar perda"}
+                </button>
+              </div>
+            </>
+          )}
+
+          {modo === "excluir" && (
+            <>
+              <div className="text-sm" style={{ color: "var(--ink)" }}>
+                Excluir <b>{local.nome || "este lead"}</b> permanentemente?
+              </div>
+              <div className="text-xs" style={{ color: "var(--ink-muted)" }}>
+                Isso apaga o lead e toda a linha do tempo de interações — não pode ser desfeito. Se é só pra tirar do funil ativo mantendo o histórico, use "Perdido" em vez disso.
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t" style={{ borderColor: "var(--border)" }}>
+                <button onClick={() => setModo("editar")} disabled={salvando} className="text-xs px-3 py-2 rounded-md disabled:opacity-50" style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}>Cancelar</button>
+                <button onClick={() => onExcluir(local.id)} disabled={salvando}
+                  className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md disabled:opacity-50"
+                  style={{ backgroundColor: "#E11D2E", color: "#fff" }}>
+                  <Trash2 size={14} /> {salvando ? "Excluindo..." : "Excluir permanentemente"}
                 </button>
               </div>
             </>
@@ -402,6 +428,16 @@ export default function Funil() {
     }
   };
 
+  const excluirLead = async (leadId) => {
+    setSalvando(true);
+    setErro("");
+    const { error } = await supabase.from("leads").delete().eq("id", leadId);
+    if (error) { setErro("Erro ao excluir lead: " + error.message); setSalvando(false); return; }
+    setLeads((prev) => prev.filter((l) => l.id !== leadId));
+    setSalvando(false);
+    setSelecionado(null);
+  };
+
   const marcarPerdido = async (lead, motivo) => {
     setSalvando(true);
     setErro("");
@@ -505,13 +541,13 @@ export default function Funil() {
 
       {novoAberto && (
         <LeadModal lead={emptyLead()} isNew atividades={[]} onClose={() => setNovoAberto(false)} onSave={salvarLead} salvando={salvando}
-          onRegistrarAtividade={() => {}} onConverter={() => {}} onMarcarPerdido={() => {}} />
+          onRegistrarAtividade={() => {}} onConverter={() => {}} onMarcarPerdido={() => {}} onExcluir={() => {}} />
       )}
 
       {selecionado && (
         <LeadModal lead={selecionado} isNew={false} atividades={atividadesPorLead[selecionado.id] || []}
           onClose={() => setSelecionado(null)} onSave={salvarLead} salvando={salvando}
-          onRegistrarAtividade={registrarAtividade} onConverter={converterEmCliente} onMarcarPerdido={marcarPerdido} />
+          onRegistrarAtividade={registrarAtividade} onConverter={converterEmCliente} onMarcarPerdido={marcarPerdido} onExcluir={excluirLead} />
       )}
     </div>
   );

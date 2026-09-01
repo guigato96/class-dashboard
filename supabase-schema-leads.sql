@@ -119,8 +119,14 @@ as $$
 declare
   v_telefone text;
   v_lead public.leads;
+  v_temperatura text;
 begin
-  v_telefone := regexp_replace(coalesce(payload->>'telefone', payload->>'contato_telefone', ''), '\D', '', 'g');
+  v_telefone := regexp_replace(coalesce(payload->>'telefone', payload->>'contato_telefone', payload->>'whatsapp_link', ''), '\D', '', 'g');
+
+  v_temperatura := payload->>'temperatura';
+  if v_temperatura not in ('quente', 'morno', 'frio') then
+    v_temperatura := 'morno';
+  end if;
 
   if v_telefone <> '' then
     select * into v_lead
@@ -138,7 +144,7 @@ begin
 
   insert into public.leads (
     nome, contato_nome, contato_telefone, contato_email,
-    origem, nicho, plataformas_interesse, payload_n8n
+    origem, temperatura, nicho, plataformas_interesse, payload_n8n
   )
   values (
     coalesce(payload->>'nome', payload->>'empresa', 'Lead sem nome'),
@@ -146,6 +152,7 @@ begin
     nullif(v_telefone, ''),
     payload->>'email',
     coalesce(payload->>'origem', 'trafego_pago'),
+    v_temperatura,
     payload->>'nicho',
     case when payload ? 'plataformas_interesse'
       then array(select jsonb_array_elements_text(payload->'plataformas_interesse'))

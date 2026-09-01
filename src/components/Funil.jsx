@@ -294,6 +294,8 @@ export default function Funil() {
   const [filtro, setFiltro] = useState("todos");
   const [busca, setBusca] = useState("");
   const [erro, setErro] = useState("");
+  const [arrastando, setArrastando] = useState(null);
+  const [colunaSobre, setColunaSobre] = useState(null);
 
   const hoje = useMemo(() => new Date(new Date().toDateString()), []);
 
@@ -388,6 +390,18 @@ export default function Funil() {
     setSelecionado(null);
   };
 
+  const moverEtapa = async (leadId, novaEtapa) => {
+    const lead = leads.find((l) => l.id === leadId);
+    if (!lead || lead.etapa === novaEtapa) return;
+    const etapaAnterior = lead.etapa;
+    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, etapa: novaEtapa } : l)));
+    const { error } = await supabase.from("leads").update({ etapa: novaEtapa }).eq("id", leadId);
+    if (error) {
+      setErro("Erro ao mover lead: " + error.message);
+      setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, etapa: etapaAnterior } : l)));
+    }
+  };
+
   const marcarPerdido = async (lead, motivo) => {
     setSalvando(true);
     setErro("");
@@ -434,32 +448,59 @@ export default function Funil() {
       </div>
 
       <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(6, minmax(200px, 1fr))", overflowX: "auto" }}>
-        {colunas.map((col) => (
-          <div key={col.id} className="flex flex-col gap-2 min-w-[200px]">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{col.label}</span>
-              <span className="text-xs" style={{ color: "var(--ink-faint)" }}>{col.leads.length}</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              {col.leads.map((l) => {
-                const estilo = ALERTA_STYLE[l._alerta];
-                return (
-                  <div key={l.id} onClick={() => abrirLead(l)}
-                    className="rounded-xl p-3 cursor-pointer transition-transform duration-150 hover:-translate-y-0.5"
-                    style={{ border: `1px solid ${estilo.border}55`, borderLeft: `3px solid ${estilo.border}`, backgroundColor: estilo.bg }}>
-                    <div className="text-sm font-medium mb-1" style={{ color: "var(--ink)" }}>{l.nome}</div>
-                    <div className="text-xs mb-2" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <Badge color={TEMP_COLOR[l.temperatura]}>{TEMP_LABEL[l.temperatura]}</Badge>
-                      {l.data_proxima_acao && <span className="text-xs flex items-center gap-1" style={{ color: "var(--ink-muted)" }}><Clock size={11} /> {new Date(l.data_proxima_acao + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>}
+        {colunas.map((col) => {
+          const emFoco = colunaSobre === col.id;
+          return (
+            <div key={col.id} className="flex flex-col gap-2 min-w-[200px]">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{col.label}</span>
+                <span className="text-xs" style={{ color: "var(--ink-faint)" }}>{col.leads.length}</span>
+              </div>
+              <div
+                className="flex flex-col gap-2 rounded-xl transition-colors duration-100 min-h-[60px]"
+                style={{
+                  outline: emFoco ? `2px dashed ${PURPLE}` : "2px dashed transparent",
+                  outlineOffset: 4,
+                  backgroundColor: emFoco ? PURPLE + "14" : "transparent",
+                }}
+                onDragOver={(e) => { e.preventDefault(); if (colunaSobre !== col.id) setColunaSobre(col.id); }}
+                onDragLeave={() => setColunaSobre((c) => (c === col.id ? null : c))}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const leadId = e.dataTransfer.getData("text/plain");
+                  moverEtapa(leadId, col.id);
+                  setColunaSobre(null);
+                  setArrastando(null);
+                }}
+              >
+                {col.leads.map((l) => {
+                  const estilo = ALERTA_STYLE[l._alerta];
+                  const sendoArrastado = arrastando === l.id;
+                  return (
+                    <div key={l.id}
+                      draggable
+                      onDragStart={(e) => { setArrastando(l.id); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", l.id); }}
+                      onDragEnd={() => { setArrastando(null); setColunaSobre(null); }}
+                      onClick={() => abrirLead(l)}
+                      className="rounded-xl p-3 cursor-grab active:cursor-grabbing transition-transform duration-150 hover:-translate-y-0.5"
+                      style={{
+                        border: `1px solid ${estilo.border}55`, borderLeft: `3px solid ${estilo.border}`, backgroundColor: estilo.bg,
+                        opacity: sendoArrastado ? 0.35 : 1,
+                      }}>
+                      <div className="text-sm font-medium mb-1" style={{ color: "var(--ink)" }}>{l.nome}</div>
+                      <div className="text-xs mb-2" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <Badge color={TEMP_COLOR[l.temperatura]}>{TEMP_LABEL[l.temperatura]}</Badge>
+                        {l.data_proxima_acao && <span className="text-xs flex items-center gap-1" style={{ color: "var(--ink-muted)" }}><Clock size={11} /> {new Date(l.data_proxima_acao + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-              {col.leads.length === 0 && <div className="text-xs text-center py-6 rounded-xl" style={{ color: "#3B3448", border: "1px dashed var(--border)" }}>vazio</div>}
+                  );
+                })}
+                {col.leads.length === 0 && <div className="text-xs text-center py-6 rounded-xl" style={{ color: "#3B3448", border: "1px dashed var(--border)" }}>vazio</div>}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {novoAberto && (

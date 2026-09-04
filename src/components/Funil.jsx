@@ -345,9 +345,10 @@ export default function Funil() {
   const enriquecidos = useMemo(() => leads.map((l) => ({ ...l, _alerta: alertaLead(l, hoje) })), [leads, hoje]);
 
   const filtrados = useMemo(() => {
-    let lista = filtro === "perdidos"
-      ? enriquecidos.filter((l) => l.etapa === "perdido")
-      : enriquecidos.filter((l) => l.etapa !== "ganho" && l.etapa !== "perdido");
+    let lista;
+    if (filtro === "perdidos") lista = enriquecidos.filter((l) => l.etapa === "perdido");
+    else if (filtro === "fechados") lista = enriquecidos.filter((l) => l.etapa === "ganho");
+    else lista = enriquecidos.filter((l) => l.etapa !== "ganho" && l.etapa !== "perdido");
     if (filtro === "atrasados") lista = lista.filter((l) => l._alerta === "vermelho");
     if (filtro === "quente") lista = lista.filter((l) => l.temperatura === "quente");
     if (busca.trim()) {
@@ -485,7 +486,7 @@ export default function Funil() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
-        {[{ id: "todos", label: "Todos" }, { id: "atrasados", label: "Atrasados" }, { id: "quente", label: "Quentes" }, { id: "perdidos", label: "Perdidos" }].map((f) => (
+        {[{ id: "todos", label: "Todos" }, { id: "atrasados", label: "Atrasados" }, { id: "quente", label: "Quentes" }, { id: "fechados", label: "Contratos fechados" }, { id: "perdidos", label: "Perdidos" }].map((f) => (
           <button key={f.id} onClick={() => setFiltro(f.id)} className="px-3 py-1.5 rounded-full transition-colors"
             style={{ border: "1px solid var(--border)", backgroundColor: filtro === f.id ? PURPLE : "transparent", color: filtro === f.id ? "#fff" : "var(--ink-muted)" }}>
             {f.label}
@@ -521,7 +522,32 @@ export default function Funil() {
         </div>
       )}
 
-      {filtro !== "perdidos" && (
+      {filtro === "fechados" && (
+        <div className="flex flex-col gap-2">
+          {filtrados.length === 0 && (
+            <div className="text-sm text-center py-16" style={{ color: "var(--ink-faint)" }}>Nenhum contrato fechado ainda.</div>
+          )}
+          {filtrados.map((l) => (
+            <div key={l.id} onClick={() => abrirLead(l)}
+              className="rounded-xl p-3 cursor-pointer transition-transform duration-150 hover:-translate-y-0.5"
+              style={{ border: "1px solid #22C55E33", borderLeft: "3px solid #22C55E", backgroundColor: "var(--card-bg)" }}>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>{l.nome}</div>
+                  <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Badge color="#22C55E">Fechado</Badge>
+                  <span className="text-xs" style={{ color: "var(--ink-faint)" }}>{l.updated_at ? new Date(l.updated_at).toLocaleDateString("pt-BR") : ""}</span>
+                </div>
+              </div>
+              <div className="text-xs mt-2" style={{ color: "var(--ink-muted)" }}>Origem: <b style={{ color: "var(--ink)" }}>{ORIGEM_LABEL[l.origem] || l.origem}</b></div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {filtro !== "perdidos" && filtro !== "fechados" && (
       <div className="flex gap-3 overflow-x-auto pb-2">
         {colunas.map((col) => {
           const emFoco = colunaSobre === col.id;

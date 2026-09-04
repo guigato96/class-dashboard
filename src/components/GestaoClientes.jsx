@@ -458,8 +458,10 @@ export default function GestaoClientes() {
 
         setClientes(comPagamentoDoMes);
       } else if (mesRef < mesAtualRef()) {
-        // Meses passados: mostra quem teve lançamento naquele mês, mesmo que o
-        // contrato já tenha sido cancelado depois — histórico nunca some.
+        // Meses passados: mostra quem teve lançamento naquele mês, desde que o
+        // contrato ainda estivesse vigente nesse mês — cliente nunca aparece
+        // depois do mês de encerramento (a receita já registrada continua
+        // valendo pro Dashboard, que soma direto de historico_pagamentos).
         const { data: historicoData, error: historicoError } = await supabase
           .from("historico_pagamentos")
           .select("*, clientes(*)")
@@ -473,7 +475,7 @@ export default function GestaoClientes() {
         }
 
         const lista = (historicoData || [])
-          .filter((h) => h.clientes)
+          .filter((h) => h.clientes && contratoJaComecou(h.clientes, mesRef) && contratoAindaAtivo(h.clientes, mesRef))
           .map((h) => ({ ...h.clientes, status_pagamento_mes: h.status }))
           .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
 

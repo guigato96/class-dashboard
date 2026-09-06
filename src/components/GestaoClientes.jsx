@@ -201,6 +201,18 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
       <Field label="Valor mensal (R$)">
         <input className={inputCls} style={inputStyle} type="number" value={local.valor_mensal} onChange={(e) => set("valor_mensal", e.target.value)} placeholder="1500" />
       </Field>
+      {!isNew && (
+        <Field label={`Valor cobrado em ${mesLabel} (R$)`}>
+          <input
+            className={inputCls}
+            style={inputStyle}
+            type="number"
+            value={local.valor_mes_atual ?? local.valor_mensal}
+            onChange={(e) => set("valor_mes_atual", e.target.value)}
+            placeholder={String(local.valor_mensal || "1500")}
+          />
+        </Field>
+      )}
       <Field label="Dia de vencimento">
         <input className={inputCls} style={inputStyle} type="number" min="1" max="31" value={local.dia_vencimento || ""} onChange={(e) => set("dia_vencimento", e.target.value)} placeholder="10" />
       </Field>
@@ -446,6 +458,7 @@ export default function GestaoClientes() {
             cliente_id: c.id,
             mes_referencia: mesRef,
             status: "pendente",
+            valor_previsto: c.valor_mensal,
           }));
           const { data: criados } = await supabase.from("historico_pagamentos").insert(novosRegistros).select();
           (criados || []).forEach((h) => historicoMap.set(h.cliente_id, h));
@@ -454,6 +467,7 @@ export default function GestaoClientes() {
         const comPagamentoDoMes = lista.map((c) => ({
           ...c,
           status_pagamento_mes: historicoMap.get(c.id)?.status || "pendente",
+          valor_mes_atual: historicoMap.get(c.id)?.valor_previsto ?? c.valor_mensal,
         }));
 
         setClientes(comPagamentoDoMes);
@@ -476,7 +490,7 @@ export default function GestaoClientes() {
 
         const lista = (historicoData || [])
           .filter((h) => h.clientes && contratoJaComecou(h.clientes, mesRef) && contratoAindaAtivo(h.clientes, mesRef))
-          .map((h) => ({ ...h.clientes, status_pagamento_mes: h.status }))
+          .map((h) => ({ ...h.clientes, status_pagamento_mes: h.status, valor_mes_atual: h.valor_previsto ?? h.clientes.valor_mensal }))
           .sort((a, b) => (a.nome || "").localeCompare(b.nome || "", "pt-BR"));
 
         setClientes(lista);
@@ -507,6 +521,7 @@ export default function GestaoClientes() {
         const lista = listaBase.map((c) => ({
           ...c,
           status_pagamento_mes: historicoMap.get(c.id)?.status || "pendente",
+          valor_mes_atual: historicoMap.get(c.id)?.valor_previsto ?? c.valor_mensal,
         }));
 
         setClientes(lista);
@@ -539,6 +554,8 @@ export default function GestaoClientes() {
       }
     }
 
+    const valorMes = cliente.valor_mes_atual === "" || cliente.valor_mes_atual == null ? payload.valor_mensal : Number(cliente.valor_mes_atual);
+
     const { data: historico, error: historicoError } = await supabase
       .from("historico_pagamentos")
       .upsert(
@@ -546,7 +563,8 @@ export default function GestaoClientes() {
           cliente_id: clienteId,
           mes_referencia: mesRef,
           status: payload.status_pagamento_mes,
-          valor_pago: payload.status_pagamento_mes === "pago" ? payload.valor_mensal : null,
+          valor_previsto: valorMes,
+          valor_pago: payload.status_pagamento_mes === "pago" ? valorMes : null,
           data_pagamento: payload.status_pagamento_mes === "pago" ? new Date().toISOString().slice(0, 10) : null,
         },
         { onConflict: "cliente_id,mes_referencia" }
@@ -558,7 +576,7 @@ export default function GestaoClientes() {
       setErro("Cliente salvo, mas houve erro ao registrar o pagamento do mês: " + historicoError.message);
     }
 
-    const clienteFinal = { ...payload, id: clienteId, status_pagamento_mes: historico?.status || payload.status_pagamento_mes };
+    const clienteFinal = { ...payload, id: clienteId, status_pagamento_mes: historico?.status || payload.status_pagamento_mes, valor_mes_atual: historico?.valor_previsto ?? valorMes };
 
     setClientes((prev) => {
       const existe = prev.some((c) => c.id === clienteId);
@@ -575,12 +593,14 @@ export default function GestaoClientes() {
     setErro("");
     setClientes((prev) => prev.map((c) => (c.id === cliente.id ? { ...c, status_pagamento_mes: novoStatus } : c)));
 
+    const valorMes = cliente.valor_mes_atual ?? cliente.valor_mensal;
     const { error } = await supabase.from("historico_pagamentos").upsert(
       {
         cliente_id: cliente.id,
         mes_referencia: mesRef,
         status: novoStatus,
-        valor_pago: novoStatus === "pago" ? cliente.valor_mensal : null,
+        valor_previsto: valorMes,
+        valor_pago: novoStatus === "pago" ? valorMes : null,
         data_pagamento: novoStatus === "pago" ? new Date().toISOString().slice(0, 10) : null,
       },
       { onConflict: "cliente_id,mes_referencia" }
@@ -661,8 +681,8 @@ export default function GestaoClientes() {
 
   const totalAtivos = clientes.length;
   const receitaPrevista = clientes.reduce((sum, c) => sum + (Number(c.valor_mensal) || 0), 0);
-  const recebidoMes = clientes.filter((c) => c.status_pagamento_mes === "pago").reduce((sum, c) => sum + (Number(c.valor_mensal) || 0), 0);
-  const aReceberMes = clientes.filter((c) => c.status_pagamento_mes !== "pago").reduce((sum, c) => sum + (Number(c.valor_mensal) || 0), 0);
+  const recebidoMes = clientes.filter((c) => c.status_pagamento_mes === "pago").reduce((sum, c) => sum + (Number(c.valor_mes_atual ?? c.valor_mensal) || 0), 0);
+  const aReceberMes = clientes.filter((c) => c.status_pagamento_mes !== "pago").reduce((sum, c) => sum + (Number(c.valor_mes_atual ?? c.valor_mensal) || 0), 0);
   const emRiscoAlto = enriquecidos.filter((c) => c._d.nivel === "alto").length;
   const positivos = clientes.filter((c) => c.status_saude === "positivo").length;
   const neutros = clientes.filter((c) => c.status_saude === "neutro").length;
@@ -796,7 +816,12 @@ export default function GestaoClientes() {
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: risco.border }} />
                   <div>
                     <div className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{c.nome || "Sem nome"}</div>
-                    <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{c.nicho || "Nicho não definido"} · {fmtMoney(c.valor_mensal)}/mês</div>
+                    <div className="text-xs" style={{ color: "var(--ink-muted)" }}>
+                      {c.nicho || "Nicho não definido"} · {fmtMoney(c.valor_mes_atual ?? c.valor_mensal)}/mês
+                      {c.valor_mes_atual != null && Number(c.valor_mes_atual) !== Number(c.valor_mensal) && (
+                        <span title={`Plano recorrente: ${fmtMoney(c.valor_mensal)}/mês`} style={{ color: "#EAB308" }}> · ajustado neste mês</span>
+                      )}
+                    </div>
                   </div>
                   <select
                     value={c.status_saude}

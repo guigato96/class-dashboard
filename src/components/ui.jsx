@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { isHidden, MASK } from "../lib/privacy";
 
 export const PURPLE = "#8B5CF6";
 export const PURPLE_LIGHT = "#C4B5FD";
@@ -29,6 +30,7 @@ export function useTheme() {
 }
 
 export function fmtMoney(v) {
+  if (isHidden()) return MASK;
   const n = Number(v) || 0;
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }

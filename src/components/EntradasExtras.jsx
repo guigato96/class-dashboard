@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { isHidden, MASK } from "../lib/privacy";
 import { Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, Save, CheckCircle2, Clock, DollarSign } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, addMeses, labelMes } from "../lib/mes";
@@ -7,6 +8,7 @@ import PaymentSwitch from "./PaymentSwitch";
 const PURPLE = "#8B5CF6";
 
 function fmtMoney(v) {
+  if (isHidden()) return MASK;
   const n = Number(v) || 0;
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }

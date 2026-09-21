@@ -9,11 +9,14 @@ import Despesas from "./components/Despesas";
 import Funil from "./components/Funil";
 import VisaoComercial from "./components/VisaoComercial";
 import { useTheme } from "./components/ui";
+import { usePrivacy } from "./lib/privacy";
 
 export default function App() {
   const [session, setSession] = useState(undefined);
   const [aba, setAba] = useState("dashboard");
   const [theme, toggleTheme] = useTheme();
+  // Chamado aqui (e não só no Layout) pra que as abas re-renderizem ao ocultar/mostrar valores.
+  const [valoresOcultos, toggleValores] = usePrivacy();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -36,7 +39,7 @@ export default function App() {
   }
 
   return (
-    <Layout aba={aba} onAbaChange={setAba} onSignOut={() => supabase.auth.signOut()} theme={theme} onToggleTheme={toggleTheme}>
+    <Layout aba={aba} onAbaChange={setAba} onSignOut={() => supabase.auth.signOut()} theme={theme} onToggleTheme={toggleTheme} valoresOcultos={valoresOcultos} onToggleValores={toggleValores}>
       {aba === "dashboard" && <Dashboard />}
       {aba === "funil" && <Funil />}
       {aba === "comercial" && <VisaoComercial />}

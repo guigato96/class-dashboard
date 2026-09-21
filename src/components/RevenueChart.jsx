@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { isHidden } from "../lib/privacy";
 
 const PURPLE = "#8B5CF6";
 
 function fmtMoneyShort(v) {
+  if (isHidden()) return "••••";
   if (v >= 1000) return "R$ " + (v / 1000).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + "k";
   return "R$ " + v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
 }

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Clock, LogOut, ChevronLeft, ChevronRight, LayoutDashboard, Users, Receipt, Banknote, GitBranch, BarChart3, Sun, Moon } from "lucide-react";
+import { Clock, LogOut, ChevronLeft, ChevronRight, LayoutDashboard, Users, Receipt, Banknote, GitBranch, BarChart3, Sun, Moon, Eye, EyeOff } from "lucide-react";
 import logoClass from "../assets/logo-class.png";
 import { mesAtualLabel } from "../lib/mes";
 
@@ -15,7 +15,7 @@ const ABAS = [
   { id: "despesas", label: "Despesas", icon: Receipt },
 ];
 
-export default function Layout({ aba, onAbaChange, onSignOut, children, theme, onToggleTheme }) {
+export default function Layout({ aba, onAbaChange, onSignOut, children, theme, onToggleTheme, valoresOcultos, onToggleValores }) {
   const [aberta, setAberta] = useState(true);
   const mesLabel = mesAtualLabel();
 
@@ -123,7 +123,22 @@ export default function Layout({ aba, onAbaChange, onSignOut, children, theme, o
         </div>
       </aside>
 
-      <main className="flex-1 p-6 min-w-0">{children}</main>
+      <main className="flex-1 p-6 min-w-0">
+        {onToggleValores && (
+          <div className="flex justify-end -mb-2">
+          <button
+            onClick={onToggleValores}
+            title={valoresOcultos ? "Mostrar valores" : "Ocultar valores"}
+            aria-label={valoresOcultos ? "Mostrar valores" : "Ocultar valores"}
+            className="flex items-center justify-center rounded-full p-2 transition-colors hover:bg-[var(--hover-bg)]"
+            style={{ border: "1px solid var(--border)", color: valoresOcultos ? PURPLE : "var(--ink-muted)" }}
+          >
+            {valoresOcultos ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+          </div>
+        )}
+        {children}
+      </main>
     </div>
   );
 }

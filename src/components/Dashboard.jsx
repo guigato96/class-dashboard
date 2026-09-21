@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { isHidden, MASK } from "../lib/privacy";
 import { DollarSign, TrendingDown, TrendingUp, Minus, Wallet, Target } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, ultimosMeses, mesDaData } from "../lib/mes";
 import OverviewChart from "./OverviewChart";
 
 function fmtMoney(v) {
+  if (isHidden()) return MASK;
   const n = Number(v) || 0;
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }

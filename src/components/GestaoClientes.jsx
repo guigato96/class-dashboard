@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { isHidden, MASK } from "../lib/privacy";
 import { Plus, ChevronDown, ChevronUp, Users, TrendingUp, TrendingDown, Minus, AlertTriangle, Calendar, DollarSign, Ban, Save, Search } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, labelMes, mesDaData } from "../lib/mes";
@@ -19,6 +20,7 @@ function diffDays(a, b) {
 }
 
 function fmtMoney(v) {
+  if (isHidden()) return MASK;
   const n = Number(v) || 0;
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 }

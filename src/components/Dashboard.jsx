@@ -4,6 +4,7 @@ import { DollarSign, TrendingDown, TrendingUp, Minus, Wallet, Target } from "luc
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, ultimosMeses, mesDaData } from "../lib/mes";
 import OverviewChart from "./OverviewChart";
+import Graficos from "./Graficos";
 
 function fmtMoney(v) {
   if (isHidden()) return MASK;
@@ -168,6 +169,8 @@ export default function Dashboard() {
         <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "var(--ink-muted)" }}>Receita x Despesa · últimos 6 meses</div>
         <OverviewChart data={historicoMensal} />
       </div>
+
+      <Graficos />
     </div>
   );
 }

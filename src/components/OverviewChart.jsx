@@ -9,7 +9,7 @@ export default function OverviewChart({ data }) {
         { key: "despesa", label: "Despesa", values: data.map((d) => d.despesa) },
       ]}
       labels={data.map((d) => d.mes)}
-      tipo="area"
+      tipo="bar"
       unidade="money"
     />
   );

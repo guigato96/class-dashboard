@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { StatCard } from "./ui";
 import { isHidden, MASK } from "../lib/privacy";
 import { Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, Save, CheckCircle2, Clock, DollarSign } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
@@ -54,32 +55,13 @@ function buildPayload(e) {
 function Field({ label, children }) {
   return (
     <label className="flex flex-col gap-1 text-xs">
-      <span className="uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{label}</span>
+      <span className="tracking-normal" style={{ color: "var(--ink-muted)" }}>{label}</span>
       {children}
     </label>
   );
 }
 
 const inputCls = "rounded-md px-3 py-2 text-sm bg-transparent outline-none focus:ring-1";
-
-function StatCard({ label, value, icon: Icon, accent }) {
-  return (
-    <div
-      className="rounded-2xl p-4 flex-1 min-w-[160px] transition-transform duration-200 hover:-translate-y-0.5"
-      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{label}</span>
-        {Icon && (
-          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: accent ? accent + "1A" : "color-mix(in srgb, var(--ink-muted) 10%, transparent)" }}>
-            <Icon size={14} style={{ color: accent || "var(--ink-muted)" }} />
-          </span>
-        )}
-      </div>
-      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{value}</div>
-    </div>
-  );
-}
 
 function MonthNav({ mesRef, onChange }) {
   return (
@@ -113,7 +95,7 @@ function EntradaForm({ entrada, onSave, onDelete, onCancel, isNew, salvando }) {
   const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)", backdropFilter: "blur(6px)" }}>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)" }}>
       <div className="col-span-2 md:col-span-3">
         <Field label="Descrição">
           <input className={inputCls} style={inputStyle} value={local.descricao} onChange={(e) => set("descricao", e.target.value)} placeholder="Ex: Venda de página para Clínica X" />
@@ -326,7 +308,7 @@ export default function EntradasExtras() {
           </div>
 
           {novoAberto && (
-            <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+            <div className="mb-4 rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
               <div className="px-5 py-3 text-sm font-medium" style={{ backgroundColor: "var(--header-bg)", color: "var(--ink)", borderBottom: `1px solid ${PURPLE}33` }}>Nova entrada</div>
               <EntradaForm entrada={emptyEntrada(mesRef)} onSave={salvarEntrada} onCancel={() => setNovoAberto(false)} onDelete={() => {}} isNew salvando={salvando} />
             </div>
@@ -345,7 +327,7 @@ export default function EntradasExtras() {
               return (
                 <div
                   key={e.id}
-                  className="rounded-2xl overflow-hidden transition-transform duration-200 hover:-translate-y-0.5"
+                  className="rounded-xl overflow-hidden transition-transform duration-200 hover:-translate-y-0.5"
                   style={{ border: `1px solid ${corStatus}55`, borderLeft: `3px solid ${corStatus}`, backgroundColor: `${corStatus}1A` }}
                 >
                   <div

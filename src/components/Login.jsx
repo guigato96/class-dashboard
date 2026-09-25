@@ -53,11 +53,11 @@ export default function Login() {
 
         <form
           onSubmit={entrar}
-          className="rounded-2xl p-6 flex flex-col gap-4"
-          style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
+          className="rounded-xl p-6 flex flex-col gap-4"
+          style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}
         >
           <label className="flex flex-col gap-1 text-xs">
-            <span className="uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>E-mail</span>
+            <span className="tracking-normal" style={{ color: "var(--ink-muted)" }}>E-mail</span>
             <input
               type="email"
               required
@@ -70,7 +70,7 @@ export default function Login() {
             />
           </label>
           <label className="flex flex-col gap-1 text-xs">
-            <span className="uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>Senha</span>
+            <span className="tracking-normal" style={{ color: "var(--ink-muted)" }}>Senha</span>
             <input
               type="password"
               required

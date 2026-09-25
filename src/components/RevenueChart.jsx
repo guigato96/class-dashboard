@@ -69,7 +69,7 @@ export default function RevenueChart({ data }) {
                 width={barW}
                 height={Math.max(barH, 1)}
                 rx="4"
-                fill={PURPLE}
+                style={{ fill: "var(--ink)" }}
                 opacity={isHover || isLast ? 1 : 0.65}
               />
               {isLast && d.total > 0 && (

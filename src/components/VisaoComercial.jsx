@@ -148,8 +148,8 @@ export default function VisaoComercial() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
-          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "var(--ink-muted)" }}>Temperatura da carteira ativa ({ativos.length})</div>
+        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+          <div className="text-xs tracking-normal mb-4" style={{ color: "var(--ink-muted)" }}>Temperatura da carteira ativa ({ativos.length})</div>
           <div className="flex flex-col gap-3">
             <BarraHorizontal label="Quente" valor={quentes} total={ativos.length} cor={TEMP_COLOR.quente} />
             <BarraHorizontal label="Morno" valor={mornos} total={ativos.length} cor={TEMP_COLOR.morno} />
@@ -157,29 +157,29 @@ export default function VisaoComercial() {
           </div>
         </div>
 
-        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
-          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "var(--ink-muted)" }}>Onde o funil está agora</div>
+        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+          <div className="text-xs tracking-normal mb-4" style={{ color: "var(--ink-muted)" }}>Onde o funil está agora</div>
           <div className="flex flex-col gap-3">
             {porEtapa.map((e) => <BarraHorizontal key={e.id} label={e.label} valor={e.valor} total={e.total} cor="#8B5CF6" />)}
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
-        <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "var(--ink-muted)" }}>Leads entrados · últimos 6 meses</div>
+      <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+        <div className="text-xs tracking-normal mb-3" style={{ color: "var(--ink-muted)" }}>Leads entrados · últimos 6 meses</div>
         <LeadsPorMesChart data={leadsPorMes} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
-          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "var(--ink-muted)" }}>Clientes fechados por origem</div>
+        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+          <div className="text-xs tracking-normal mb-4" style={{ color: "var(--ink-muted)" }}>Clientes fechados por origem</div>
           {porOrigem.length === 0
             ? <div className="text-xs py-4 text-center" style={{ color: "var(--ink-faint)" }}>Nenhum fechamento ainda</div>
             : <div className="flex flex-col gap-3">{porOrigem.map((o) => <BarraHorizontal key={o.id} label={o.label} valor={o.valor} total={o.total} cor="#22C55E" />)}</div>}
         </div>
 
-        <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
-          <div className="text-xs uppercase tracking-wide mb-4" style={{ color: "var(--ink-muted)" }}>Por que o funil vaza</div>
+        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+          <div className="text-xs tracking-normal mb-4" style={{ color: "var(--ink-muted)" }}>Por que o funil vaza</div>
           {motivosPerda.length === 0
             ? <div className="text-xs py-4 text-center" style={{ color: "var(--ink-faint)" }}>Nenhuma perda registrada ainda</div>
             : <div className="flex flex-col gap-3">{motivosPerda.map((m) => <BarraHorizontal key={m.label} label={m.label} valor={m.valor} total={m.total} cor="#E11D2E" />)}</div>}

@@ -62,7 +62,7 @@ export function Badge({ color, children }) {
 export function Field({ label, children }) {
   return (
     <label className="flex flex-col gap-1 text-xs">
-      <span className="uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>
+      <span className="tracking-normal" style={{ color: "var(--ink-muted)" }}>
         {label}
       </span>
       {children}
@@ -70,22 +70,25 @@ export function Field({ label, children }) {
   );
 }
 
-export function StatCard({ label, value, sub, icon: Icon, accent }) {
+export function StatCard({ label, value, sub, icon: Icon, delta }) {
   return (
     <div
-      className="rounded-2xl p-4 flex-1 min-w-[160px] transition-transform duration-200 hover:-translate-y-0.5"
-      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
+      className="rounded-xl flex flex-1 min-w-[220px] overflow-hidden"
+      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}
     >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{label}</span>
-        {Icon && (
-          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: accent ? accent + "1A" : "color-mix(in srgb, var(--ink-muted) 10%, transparent)" }}>
-            <Icon size={14} style={{ color: accent || "var(--ink-muted)" }} />
-          </span>
-        )}
+      <div className="flex-1 p-4 min-w-0">
+        <div className="text-xs mb-2" style={{ color: "var(--ink-muted)" }}>{label}</div>
+        <div className="text-3xl font-semibold truncate" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{value}</div>
+        {sub && <div className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>{sub}</div>}
+        {delta}
       </div>
-      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{value}</div>
-      {sub && <div className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>{sub}</div>}
+      {Icon && (
+        <div className="w-20 shrink-0 flex items-center justify-center" style={{ backgroundColor: "var(--subtle-bg)", borderLeft: "1px solid var(--card-border)" }}>
+          <span className="flex items-center justify-center w-10 h-10 rounded-lg" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+            <Icon size={18} style={{ color: "var(--ink-muted)" }} />
+          </span>
+        </div>
+      )}
     </div>
   );
 }

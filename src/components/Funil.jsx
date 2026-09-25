@@ -174,7 +174,7 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onExcluir, salvan
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "var(--modal-overlay)" }} onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-2xl" style={{ backgroundColor: "var(--dropdown-bg)", border: "1px solid var(--border)" }} onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-xl" style={{ backgroundColor: "var(--dropdown-bg)", border: "1px solid var(--border)" }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 sticky top-0" style={{ backgroundColor: "var(--header-bg)", borderBottom: `1px solid ${PURPLE}33` }}>
           <div className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{isNew ? "Novo lead" : local.nome || "Lead"}</div>
           <button onClick={onClose} className="p-1 rounded-md hover:bg-[var(--hover-bg)]" style={{ color: "var(--ink-muted)" }}><X size={18} /></button>
@@ -187,7 +187,7 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onExcluir, salvan
 
               {!isNew && (
                 <div className="flex flex-col gap-2">
-                  <div className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>Registrar interação</div>
+                  <div className="text-xs tracking-normal" style={{ color: "var(--ink-muted)" }}>Registrar interação</div>
                   <div className="flex gap-2">
                     <input className={inputCls + " flex-1"} style={inputStyle} value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex: liguei, disse que vai decidir semana que vem..." />
                     <button
@@ -202,7 +202,7 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onExcluir, salvan
 
               {!isNew && atividades.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <div className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>Linha do tempo</div>
+                  <div className="text-xs tracking-normal" style={{ color: "var(--ink-muted)" }}>Linha do tempo</div>
                   <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
                     {atividades.map((a) => (
                       <div key={a.id} className="text-xs rounded-md px-3 py-2" style={{ backgroundColor: "var(--subtle-bg)", color: "var(--ink-muted)" }}>
@@ -469,7 +469,7 @@ export default function Funil() {
     <div>
       <div className="flex items-start justify-between mb-3">
         <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>
-          Funil <span style={{ background: `linear-gradient(90deg, ${PURPLE_LIGHT}, ${PURPLE})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>comercial</span>
+          Funil <span style={{ color: "var(--ink-muted)" }}>comercial</span>
         </h1>
         <button onClick={() => setNovoAberto(true)} className="flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-[filter] hover:brightness-110" style={{ backgroundColor: PURPLE, color: "#fff" }}>
           <Plus size={16} /> Novo lead
@@ -554,7 +554,7 @@ export default function Funil() {
           return (
             <div key={col.id} className="flex flex-col gap-2 w-[240px] shrink-0">
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{col.label}</span>
+                <span className="text-xs font-semibold tracking-normal" style={{ color: "var(--ink-muted)" }}>{col.label}</span>
                 <span className="text-xs" style={{ color: "var(--ink-faint)" }}>{col.leads.length}</span>
               </div>
               <div

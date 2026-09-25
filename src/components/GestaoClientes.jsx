@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { StatCard } from "./ui";
 import { isHidden, MASK } from "../lib/privacy";
 import { Plus, ChevronDown, ChevronUp, Users, TrendingUp, TrendingDown, Minus, AlertTriangle, Calendar, DollarSign, Ban, Save, Search } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
@@ -134,7 +135,7 @@ function Badge({ color, children }) {
 function Field({ label, children }) {
   return (
     <label className="flex flex-col gap-1 text-xs">
-      <span className="uppercase tracking-wide" style={{ color: "var(--ink-muted)", fontFamily: "Inter, sans-serif" }}>
+      <span className="tracking-normal" style={{ color: "var(--ink-muted)", fontFamily: "Inter, sans-serif" }}>
         {label}
       </span>
       {children}
@@ -160,7 +161,7 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
   const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)", backdropFilter: "blur(6px)" }}>
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)" }}>
       <Field label="Nome do cliente">
         <input className={inputCls} style={inputStyle} value={local.nome} onChange={(e) => set("nome", e.target.value)} placeholder="Ex: Clínica Vitalis" />
       </Field>
@@ -300,26 +301,6 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
   );
 }
 
-function StatCard({ label, value, sub, icon: Icon, accent }) {
-  return (
-    <div
-      className="rounded-2xl p-4 flex-1 min-w-[160px] transition-transform duration-200 hover:-translate-y-0.5"
-      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>{label}</span>
-        {Icon && (
-          <span className="flex items-center justify-center w-7 h-7 rounded-full shrink-0" style={{ backgroundColor: accent ? accent + "1A" : "color-mix(in srgb, var(--ink-muted) 10%, transparent)" }}>
-            <Icon size={14} style={{ color: accent || "var(--ink-muted)" }} />
-          </span>
-        )}
-      </div>
-      <div className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{value}</div>
-      {sub && <div className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>{sub}</div>}
-    </div>
-  );
-}
-
 function ConfirmModal({ nome, mesRefInicial, loading, onConfirm, onCancel }) {
   const [mesFim, setMesFim] = useState(mesRefInicial);
   const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
@@ -331,7 +312,7 @@ function ConfirmModal({ nome, mesRefInicial, loading, onConfirm, onCancel }) {
       onClick={onCancel}
     >
       <div
-        className="w-full max-w-sm rounded-2xl p-5"
+        className="w-full max-w-sm rounded-xl p-5"
         style={{ backgroundColor: "var(--dropdown-bg)", border: "1px solid var(--border)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -385,10 +366,10 @@ function SaudeCard({ positivos, neutros, criticos }) {
 
   return (
     <div
-      className="rounded-2xl p-4 flex-1 min-w-[200px] transition-transform duration-200 hover:-translate-y-0.5"
-      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}
+      className="rounded-xl p-4 flex-1 min-w-[200px] transition-transform duration-200 hover:-translate-y-0.5"
+      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}
     >
-      <div className="text-xs uppercase tracking-wide mb-3" style={{ color: "var(--ink-muted)" }}>Saúde da carteira</div>
+      <div className="text-xs tracking-normal mb-3" style={{ color: "var(--ink-muted)" }}>Saúde da carteira</div>
       <div className="text-2xl font-semibold mb-3" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{score}%</div>
       <div className="flex h-1.5 rounded-full overflow-hidden mb-2" style={{ backgroundColor: "var(--track-bg)" }}>
         {pPos > 0 && <div style={{ width: `${pPos}%`, backgroundColor: "#22C55E" }} />}
@@ -699,7 +680,7 @@ export default function GestaoClientes() {
       <div className="flex items-start justify-between mb-3">
         <h1 className="text-2xl font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>
           Clientes{" "}
-          <span style={{ background: `linear-gradient(90deg, ${PURPLE_LIGHT}, ${PURPLE})`, WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent" }}>
+          <span style={{ color: "var(--ink-muted)" }}>
             ativos
           </span>
         </h1>
@@ -783,7 +764,7 @@ export default function GestaoClientes() {
       </div>
 
       {novoAberto && (
-        <div className="mb-4 rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+        <div className="mb-4 rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
           <div className="px-5 py-3 text-sm font-medium" style={{ backgroundColor: "var(--header-bg)", color: "var(--ink)", borderBottom: `1px solid ${PURPLE}33` }}>Novo cliente</div>
           <ClientForm client={emptyClient()} onSave={salvarCliente} onCancel={() => setNovoAberto(false)} onDelete={() => {}} isNew salvando={salvando} mesLabel={mesLabel} />
         </div>
@@ -804,7 +785,7 @@ export default function GestaoClientes() {
           return (
             <div
               key={c.id}
-              className="rounded-2xl overflow-hidden transition-transform duration-200 hover:-translate-y-0.5"
+              className="rounded-xl overflow-hidden transition-transform duration-200 hover:-translate-y-0.5"
               style={{ border: `1px solid ${risco.border}55`, borderLeft: `3px solid ${risco.border}`, backgroundColor: risco.bg }}
             >
               <div

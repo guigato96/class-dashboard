@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { StatCard } from "./ui";
 import { isHidden, MASK } from "../lib/privacy";
 import { DollarSign, TrendingDown, TrendingUp, Minus, Wallet, Target } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
@@ -26,29 +27,6 @@ function Delta({ atual, anterior, invertido }) {
     <div className="flex items-center gap-1 text-xs mt-1" style={{ color: cor }}>
       <Icon size={12} />
       <span>{sinal}{pct.toFixed(0)}% vs mês anterior</span>
-    </div>
-  );
-}
-
-function StatCard({ label, value, sub, icon: Icon, delta }) {
-  return (
-    <div
-      className="rounded-xl flex flex-1 min-w-[220px] overflow-hidden"
-      style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}
-    >
-      <div className="flex-1 p-4 min-w-0">
-        <div className="text-xs mb-2" style={{ color: "var(--ink-muted)" }}>{label}</div>
-        <div className="text-3xl font-semibold truncate" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{value}</div>
-        {sub && <div className="text-xs mt-1" style={{ color: "var(--ink-muted)" }}>{sub}</div>}
-        {delta}
-      </div>
-      {Icon && (
-        <div className="w-20 shrink-0 flex items-center justify-center" style={{ backgroundColor: "var(--subtle-bg)", borderLeft: "1px solid var(--card-border)" }}>
-          <span className="flex items-center justify-center w-10 h-10 rounded-lg" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-            <Icon size={18} style={{ color: "var(--ink-muted)" }} />
-          </span>
-        </div>
-      )}
     </div>
   );
 }

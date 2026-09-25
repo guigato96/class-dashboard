@@ -156,13 +156,13 @@ function Construtor({ inicial, onSalvar, onFechar }) {
   const tituloFinal = titulo.trim() || metricas.map((k) => METRICAS[k].label).join(" x ");
 
   return (
-    <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: "var(--card-bg)", border: `1px solid ${PURPLE}55` }}>
+    <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: "var(--card-bg)", border: `1px solid ${PURPLE}55` }}>
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>{inicial ? "Editar gráfico" : "Novo gráfico"}</div>
         <button onClick={onFechar} className="rounded-md p-1 hover:bg-[var(--hover-bg)]" style={{ color: "var(--ink-muted)" }}><X size={16} /></button>
       </div>
 
-      <div className="text-xs uppercase tracking-wide mb-2" style={{ color: "var(--ink-muted)" }}>Métricas (até 3, mesma unidade)</div>
+      <div className="text-xs tracking-normal mb-2" style={{ color: "var(--ink-muted)" }}>Métricas (até 3, mesma unidade)</div>
       <div className="flex flex-wrap gap-2 mb-4">
         {Object.entries(METRICAS).map(([k, m]) => (
           <Chip key={k} ativo={metricas.includes(k)} onClick={() => alternar(k)}>{m.label}</Chip>
@@ -171,7 +171,7 @@ function Construtor({ inicial, onSalvar, onFechar }) {
 
       <div className="flex flex-wrap gap-6 mb-4">
         <div>
-          <div className="text-xs uppercase tracking-wide mb-2" style={{ color: "var(--ink-muted)" }}>Tipo</div>
+          <div className="text-xs tracking-normal mb-2" style={{ color: "var(--ink-muted)" }}>Tipo</div>
           <div className="flex gap-2">
             {TIPOS.map((t) => (
               <Chip key={t.id} ativo={tipo === t.id} onClick={() => setTipo(t.id)}>{t.label}</Chip>
@@ -179,7 +179,7 @@ function Construtor({ inicial, onSalvar, onFechar }) {
           </div>
         </div>
         <div>
-          <div className="text-xs uppercase tracking-wide mb-2" style={{ color: "var(--ink-muted)" }}>Período</div>
+          <div className="text-xs tracking-normal mb-2" style={{ color: "var(--ink-muted)" }}>Período</div>
           <div className="flex gap-2">
             {[6, 12].map((m) => (
               <Chip key={m} ativo={meses === m} onClick={() => setMeses(m)}>{m} meses</Chip>
@@ -187,7 +187,7 @@ function Construtor({ inicial, onSalvar, onFechar }) {
           </div>
         </div>
         <div className="flex-1 min-w-[180px]">
-          <div className="text-xs uppercase tracking-wide mb-2" style={{ color: "var(--ink-muted)" }}>Título (opcional)</div>
+          <div className="text-xs tracking-normal mb-2" style={{ color: "var(--ink-muted)" }}>Título (opcional)</div>
           <input
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}

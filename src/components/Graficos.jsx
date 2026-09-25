@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, X, BarChart3, LineChart, AreaChart, Trash2 } from "lucide-react";
+import { Plus, X, BarChart3, LineChart, AreaChart, Trash2, Pencil, RotateCcw } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { ultimosMeses, mesDaData } from "../lib/mes";
 import MetricChart from "./MetricChart";
 
 const PURPLE = "#8B5CF6";
-const STORAGE_KEY = "class-graficos";
+const STORAGE_KEY = "class-graficos-v2";
+const STORAGE_KEY_V1 = "class-graficos"; // só gráficos criados por você, antes de os padrões serem editáveis
 
 const METRICAS = {
   receita: { label: "Receita total", unidade: "money" },
@@ -27,17 +28,20 @@ const TIPOS = [
 ];
 
 const PADRAO = [
-  { id: "p1", titulo: "Crescimento de clientes", metricas: ["clientes"], tipo: "area", meses: 12, fixo: true },
-  { id: "p2", titulo: "Faturamento acumulado", metricas: ["receita_acum"], tipo: "line", meses: 6, fixo: true },
-  { id: "p3", titulo: "Lucro líquido", metricas: ["lucro"], tipo: "bar", meses: 6, fixo: true },
-  { id: "p4", titulo: "Novos clientes x Cancelamentos", metricas: ["novos", "cancelados"], tipo: "bar", meses: 12, fixo: true },
+  { id: "p1", titulo: "Crescimento de clientes", metricas: ["clientes"], tipo: "area", meses: 12 },
+  { id: "p2", titulo: "Faturamento acumulado", metricas: ["receita_acum"], tipo: "line", meses: 6 },
+  { id: "p3", titulo: "Lucro líquido", metricas: ["lucro"], tipo: "bar", meses: 6 },
+  { id: "p4", titulo: "Novos clientes x Cancelamentos", metricas: ["novos", "cancelados"], tipo: "bar", meses: 12 },
 ];
 
-function carregarSalvos() {
+function carregarLista() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const v2 = localStorage.getItem(STORAGE_KEY);
+    if (v2) return JSON.parse(v2);
+    const antigos = JSON.parse(localStorage.getItem(STORAGE_KEY_V1) || "[]");
+    return [...PADRAO, ...antigos];
   } catch {
-    return [];
+    return PADRAO;
   }
 }
 
@@ -90,7 +94,7 @@ function calcularMetricas(dados, meses) {
   return out;
 }
 
-function ChartCard({ config, dados, onRemove }) {
+function ChartCard({ config, dados, onEdit, onRemove }) {
   const meses = useMemo(() => ultimosMeses(12), []);
   const inicio = 12 - config.meses;
   const todas = useMemo(() => calcularMetricas(dados, meses.slice(inicio)), [dados, meses, inicio]);
@@ -103,11 +107,14 @@ function ChartCard({ config, dados, onRemove }) {
         <div className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>
           {config.titulo} · {config.meses} meses
         </div>
-        {onRemove && (
+        <div className="flex items-center gap-1">
+          <button onClick={onEdit} title="Editar gráfico" className="rounded-md p-1 hover:bg-[var(--hover-bg)]" style={{ color: "var(--ink-muted)" }}>
+            <Pencil size={14} />
+          </button>
           <button onClick={onRemove} title="Remover gráfico" className="rounded-md p-1 hover:bg-[var(--hover-bg)]" style={{ color: "var(--ink-muted)" }}>
             <Trash2 size={14} />
           </button>
-        )}
+        </div>
       </div>
       <MetricChart series={series} labels={meses.slice(inicio).map((m) => m.mes)} tipo={config.tipo} unidade={unidade} />
     </div>
@@ -131,11 +138,11 @@ function Chip({ ativo, onClick, children }) {
   );
 }
 
-function Construtor({ onSalvar, onFechar }) {
-  const [metricas, setMetricas] = useState(["receita"]);
-  const [tipo, setTipo] = useState("bar");
-  const [meses, setMeses] = useState(6);
-  const [titulo, setTitulo] = useState("");
+function Construtor({ inicial, onSalvar, onFechar }) {
+  const [metricas, setMetricas] = useState(inicial?.metricas || ["receita"]);
+  const [tipo, setTipo] = useState(inicial?.tipo || "bar");
+  const [meses, setMeses] = useState(inicial?.meses || 6);
+  const [titulo, setTitulo] = useState(inicial?.titulo || "");
 
   const alternar = (k) => {
     setMetricas((prev) => {
@@ -151,7 +158,7 @@ function Construtor({ onSalvar, onFechar }) {
   return (
     <div className="rounded-2xl p-4 mb-4" style={{ backgroundColor: "var(--card-bg)", border: `1px solid ${PURPLE}55` }}>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>Novo gráfico</div>
+        <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>{inicial ? "Editar gráfico" : "Novo gráfico"}</div>
         <button onClick={onFechar} className="rounded-md p-1 hover:bg-[var(--hover-bg)]" style={{ color: "var(--ink-muted)" }}><X size={16} /></button>
       </div>
 
@@ -193,11 +200,11 @@ function Construtor({ onSalvar, onFechar }) {
 
       <div className="flex justify-end">
         <button
-          onClick={() => onSalvar({ id: "c" + Date.now(), titulo: tituloFinal, metricas, tipo, meses })}
+          onClick={() => onSalvar({ id: inicial?.id || "c" + Date.now(), titulo: tituloFinal, metricas, tipo, meses })}
           className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md transition-[filter] hover:brightness-110"
           style={{ backgroundColor: PURPLE, color: "#fff" }}
         >
-          <Plus size={14} /> Adicionar ao painel
+          {inicial ? "Salvar alterações" : <><Plus size={14} /> Adicionar ao painel</>}
         </button>
       </div>
     </div>
@@ -206,8 +213,9 @@ function Construtor({ onSalvar, onFechar }) {
 
 export default function Graficos() {
   const [dados, setDados] = useState(null);
-  const [salvos, setSalvos] = useState(carregarSalvos);
+  const [lista, setLista] = useState(carregarLista);
   const [construindo, setConstruindo] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -222,10 +230,10 @@ export default function Graficos() {
     })();
   }, []);
 
-  const persistir = (lista) => {
-    setSalvos(lista);
+  const persistir = (nova) => {
+    setLista(nova);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(nova));
     } catch {
       // sem persistência (modo privado) — os gráficos valem só nesta sessão
     }
@@ -235,7 +243,16 @@ export default function Graficos() {
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>Gráficos</h2>
-        {!construindo && (
+        {!construindo && !editandoId && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => persistir(PADRAO)}
+              title="Voltar aos 4 gráficos originais"
+              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-md hover:bg-[var(--hover-bg)]"
+              style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }}
+            >
+              <RotateCcw size={13} /> Restaurar padrão
+            </button>
           <button
             onClick={() => setConstruindo(true)}
             className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md transition-[filter] hover:brightness-110"
@@ -243,15 +260,19 @@ export default function Graficos() {
           >
             <Plus size={14} /> Novo gráfico
           </button>
+          </div>
         )}
       </div>
 
-      {construindo && (
+      {(construindo || editandoId) && (
         <Construtor
-          onFechar={() => setConstruindo(false)}
+          key={editandoId || "novo"}
+          inicial={editandoId ? lista.find((g) => g.id === editandoId) : null}
+          onFechar={() => { setConstruindo(false); setEditandoId(null); }}
           onSalvar={(cfg) => {
-            persistir([...salvos, cfg]);
+            persistir(editandoId ? lista.map((g) => (g.id === editandoId ? cfg : g)) : [...lista, cfg]);
             setConstruindo(false);
+            setEditandoId(null);
           }}
         />
       )}
@@ -260,9 +281,20 @@ export default function Graficos() {
         <div className="text-sm py-8 text-center" style={{ color: "var(--ink-muted)" }}>Carregando gráficos...</div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          {[...PADRAO, ...salvos].map((cfg) => (
-            <ChartCard key={cfg.id} config={cfg} dados={dados} onRemove={cfg.fixo ? null : () => persistir(salvos.filter((s) => s.id !== cfg.id))} />
+          {lista.map((cfg) => (
+            <ChartCard
+              key={cfg.id}
+              config={cfg}
+              dados={dados}
+              onEdit={() => { setConstruindo(false); setEditandoId(cfg.id); }}
+              onRemove={() => persistir(lista.filter((g) => g.id !== cfg.id))}
+            />
           ))}
+          {lista.length === 0 && (
+            <div className="text-sm py-8 text-center col-span-full" style={{ color: "var(--ink-muted)" }}>
+              Nenhum gráfico. Clique em "Novo gráfico" ou "Restaurar padrão".
+            </div>
+          )}
         </div>
       )}
     </div>

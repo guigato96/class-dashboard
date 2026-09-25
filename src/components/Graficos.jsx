@@ -102,10 +102,10 @@ function ChartCard({ config, dados, onEdit, onRemove }) {
   const series = config.metricas.map((k) => ({ key: k, label: METRICAS[k].label, values: todas[k] }));
 
   return (
-    <div className="rounded-2xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)", backdropFilter: "blur(6px)" }}>
+    <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-xs uppercase tracking-wide" style={{ color: "var(--ink-muted)" }}>
-          {config.titulo} · {config.meses} meses
+        <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>
+          {config.titulo} <span style={{ color: "var(--ink-muted)", fontWeight: 400 }}>· {config.meses} meses</span>
         </div>
         <div className="flex items-center gap-1">
           <button onClick={onEdit} title="Editar gráfico" className="rounded-md p-1 hover:bg-[var(--hover-bg)]" style={{ color: "var(--ink-muted)" }}>

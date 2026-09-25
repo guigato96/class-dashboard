@@ -23,9 +23,6 @@ export default function Layout({ aba, onAbaChange, onSignOut, children, theme, o
     <div
       style={{
         backgroundColor: "var(--bg)",
-        backgroundImage:
-          "radial-gradient(circle at 20% -10%, var(--glow-purple), transparent 55%), radial-gradient(var(--hover-bg) 1px, transparent 1px)",
-        backgroundSize: "auto, 24px 24px",
         minHeight: "100vh",
         fontFamily: "Inter, sans-serif",
       }}
@@ -43,7 +40,6 @@ export default function Layout({ aba, onAbaChange, onSignOut, children, theme, o
           width: aberta ? 240 : 76,
           borderRight: "1px solid var(--card-border)",
           backgroundColor: "var(--sidebar-bg)",
-          backdropFilter: "blur(6px)",
           minHeight: "100vh",
           padding: aberta ? "20px 16px" : "20px 14px",
         }}

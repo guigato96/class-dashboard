@@ -1,49 +1,49 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #07070B;
-  --card-bg: rgba(20, 20, 23, 0.7);
-  --card-bg-soft: rgba(20, 20, 23, 0.5);
-  --panel-bg: rgba(17, 17, 20, 0.75);
-  --card-border: rgba(255, 255, 255, 0.08);
+  --bg: #0A0A0A;
+  --card-bg: #111111;
+  --card-bg-soft: #0E0E0E;
+  --panel-bg: #0F0F0F;
+  --card-border: #232323;
   --ink: #F4F4F5;
-  --ink-muted: #8B8B93;
-  --ink-faint: #55555C;
-  --border: #2A2A2E;
-  --dropdown-bg: #141417;
-  --header-bg: #17171B;
-  --subtle-bg: #1B1B20;
-  --track-bg: #232327;
-  --track-off: #3A3A3F;
+  --ink-muted: #8E8E93;
+  --ink-faint: #56565B;
+  --border: #2A2A2A;
+  --dropdown-bg: #141414;
+  --header-bg: #171717;
+  --subtle-bg: #171717;
+  --track-bg: #262626;
+  --track-off: #3A3A3A;
   --hover-bg: rgba(255, 255, 255, 0.05);
   --hover-bg-soft: rgba(255, 255, 255, 0.1);
   --modal-overlay: rgba(0, 0, 0, 0.6);
-  --glow-purple: rgba(139, 92, 246, 0.16);
-  --sidebar-bg: rgba(10, 10, 13, 0.5);
+  --glow-purple: transparent;
+  --sidebar-bg: #0D0D0D;
   --chip-bg: rgba(255, 255, 255, 0.03);
 }
 
 [data-theme="light"] {
-  --bg: #F5F4F9;
-  --card-bg: rgba(255, 255, 255, 0.75);
-  --card-bg-soft: rgba(255, 255, 255, 0.55);
-  --panel-bg: rgba(248, 247, 251, 0.92);
-  --card-border: rgba(23, 20, 32, 0.08);
-  --ink: #18151F;
-  --ink-muted: #6B6675;
-  --ink-faint: #A29CB0;
-  --border: #E3E0EA;
+  --bg: #F7F7F7;
+  --card-bg: #FFFFFF;
+  --card-bg-soft: #FCFCFC;
+  --panel-bg: #FAFAFA;
+  --card-border: #E6E6E6;
+  --ink: #0F0F10;
+  --ink-muted: #6B6B70;
+  --ink-faint: #A3A3A8;
+  --border: #E2E2E2;
   --dropdown-bg: #FFFFFF;
-  --header-bg: #EDEBF3;
-  --subtle-bg: #F0EEF5;
-  --track-bg: #E3E0EA;
-  --track-off: #D2CDDC;
-  --hover-bg: rgba(23, 20, 32, 0.04);
-  --hover-bg-soft: rgba(23, 20, 32, 0.06);
-  --modal-overlay: rgba(23, 20, 32, 0.45);
-  --glow-purple: rgba(139, 92, 246, 0.1);
-  --sidebar-bg: rgba(255, 255, 255, 0.6);
-  --chip-bg: rgba(23, 20, 32, 0.03);
+  --header-bg: #F0F0F0;
+  --subtle-bg: #F3F3F3;
+  --track-bg: #E6E6E6;
+  --track-off: #D4D4D4;
+  --hover-bg: rgba(15, 15, 16, 0.04);
+  --hover-bg-soft: rgba(15, 15, 16, 0.06);
+  --modal-overlay: rgba(15, 15, 16, 0.45);
+  --glow-purple: transparent;
+  --sidebar-bg: #FBFBFB;
+  --chip-bg: rgba(15, 15, 16, 0.03);
 }
 
 body {

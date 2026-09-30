@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { StatCard } from "./ui";
 import { isHidden, MASK } from "../lib/privacy";
-import { Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, Save, Repeat, CheckCircle2, Clock, DollarSign } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Trash2, Save, Repeat, CheckCircle2, Clock, DollarSign, CreditCard } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { mesAtualRef, addMeses, labelMes } from "../lib/mes";
 import PaymentSwitch from "./PaymentSwitch";
@@ -48,6 +48,7 @@ const emptyDespesa = () => ({
   mes_final: null,
   observacao: "",
   pago: false,
+  cartao: false,
 });
 
 function buildPayload(d) {
@@ -58,6 +59,7 @@ function buildPayload(d) {
     recorrente: !!d.recorrente,
     mes_final: d.recorrente ? d.mes_final || null : null,
     observacao: d.observacao || null,
+    cartao: !!d.cartao,
   };
 }
 
@@ -144,6 +146,15 @@ function DespesaForm({ despesa, onSave, onDelete, onCancel, isNew, salvando, mes
             onChange={(e) => set("recorrente", e.target.checked)}
           />
           Despesa recorrente (repete automaticamente todo mês)
+        </label>
+
+        <label className="flex items-center gap-2 text-xs" style={{ color: "var(--ink-muted)" }}>
+          <input
+            type="checkbox"
+            checked={!!local.cartao}
+            onChange={(e) => set("cartao", e.target.checked)}
+          />
+          Gasto no cartão
         </label>
 
         {local.recorrente && (
@@ -277,7 +288,7 @@ export default function Despesas() {
         .filter((d) => historicoMap.has(d.id))
         .map((d) => {
           const h = historicoMap.get(d.id);
-          return { ...d, valor: h.valor, pago: h.pago };
+          return { ...d, valor: h.valor, pago: h.pago, cartao: !!d.cartao };
         });
 
       setDespesas(comHistorico);
@@ -379,6 +390,7 @@ export default function Despesas() {
   const pagas = despesas.filter((d) => d.pago).length;
   const pendentes = despesas.filter((d) => !d.pago).length;
   const recorrentes = despesas.filter((d) => d.recorrente).length;
+  const totalCartao = useMemo(() => despesas.filter((d) => d.cartao).reduce((sum, d) => sum + (Number(d.valor) || 0), 0), [despesas]);
 
   const ordenadas = useMemo(() => [...despesas].sort((a, b) => (a.descricao || "").localeCompare(b.descricao || "", "pt-BR")), [despesas]);
 
@@ -408,10 +420,11 @@ export default function Despesas() {
       ) : (
         <>
           <div className="flex flex-wrap gap-3 mb-6">
-            <StatCard label={`Total (${mesLabel})`} value={fmtMoney(totalMes)} icon={DollarSign} accent="#D97706" />
-            <StatCard label="Pagas" value={pagas} icon={CheckCircle2} accent="#22C55E" />
-            <StatCard label="Pendentes" value={pendentes} icon={Clock} accent="#EAB308" />
-            <StatCard label="Recorrentes ativas" value={recorrentes} icon={Repeat} accent={PURPLE} />
+            <StatCard label={`Total (${mesLabel})`} value={fmtMoney(totalMes)} icon={DollarSign} />
+            <StatCard label="Gasto no cartão" value={fmtMoney(totalCartao)} sub={`${despesas.filter((d) => d.cartao).length} despesas`} icon={CreditCard} />
+            <StatCard label="Pagas" value={pagas} icon={CheckCircle2} />
+            <StatCard label="Pendentes" value={pendentes} icon={Clock} />
+            <StatCard label="Recorrentes ativas" value={recorrentes} icon={Repeat} />
           </div>
 
           {novoAberto && (
@@ -453,6 +466,11 @@ export default function Despesas() {
                       {d.recorrente && (
                         <span className="inline-flex items-center gap-1 text-xs" style={{ color: "var(--ink-muted)" }}>
                           <Repeat size={12} /> {d.mes_final ? `Até ${fmtMesAno(d.mes_final)}` : "Recorrente"}
+                        </span>
+                      )}
+                      {d.cartao && (
+                        <span className="inline-flex items-center gap-1 text-xs" style={{ color: "var(--ink-muted)" }}>
+                          <CreditCard size={12} /> Cartão
                         </span>
                       )}
                     </div>

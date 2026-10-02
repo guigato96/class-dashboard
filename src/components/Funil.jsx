@@ -551,7 +551,7 @@ export default function Funil() {
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mb-4 text-xs">
-        {[{ id: "todos", label: "Todos" }, { id: "atrasados", label: "Atrasados" }, { id: "quente", label: "Quentes" }, { id: "fechados", label: "Contratos fechados" }, { id: "perdidos", label: "Perdidos" }].map((f) => (
+        {[{ id: "todos", label: "Todos" }, { id: "atrasados", label: "Atrasados" }, { id: "fechados", label: "Contratos fechados" }, { id: "perdidos", label: "Perdidos" }].map((f) => (
           <button key={f.id} onClick={() => setFiltro(f.id)} className="px-3 py-1.5 rounded-full transition-colors"
             style={{ border: "1px solid var(--border)", backgroundColor: filtro === f.id ? PURPLE : "transparent", color: filtro === f.id ? "#fff" : "var(--ink-muted)" }}>
             {f.label}

@@ -1,26 +1,53 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Plus, X, Users, TrendingUp, AlertTriangle, Trophy, Search, Save,
-  Phone, Mail, Clock, MessageSquare, Ban, Check, Trash2,
+  Phone, Mail, Clock, MessageSquare, Ban, Check, Trash2, ChevronDown,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { PURPLE, PURPLE_LIGHT, fmtMoney, parseDate, diffDays, inputCls, inputStyle, Badge, Field, StatCard } from "./ui";
 
-const ETAPAS = [
-  { id: "novo", label: "Novo", prazoDias: 1 },
-  { id: "contato_feito", label: "Contato feito", prazoDias: 5 },
-  { id: "qualificado", label: "Qualificado", prazoDias: 7 },
-  { id: "reuniao_marcada", label: "Reunião marcada", prazoDias: 7 },
-  { id: "proposta_enviada", label: "Proposta enviada", prazoDias: 7 },
-  { id: "negociacao", label: "Negociação", prazoDias: 10 },
+export const LANES = [
+  { id: "frio", label: "Lead frio", cor: "#3B82F6" },
+  { id: "morno", label: "Lead morno", cor: "#EAB308" },
+  { id: "quente", label: "Lead quente", cor: "#F97316" },
+  { id: "ultra", label: "Lead ultra quente", cor: "#E11D2E" },
 ];
-const ETAPA_LABEL = Object.fromEntries(ETAPAS.map((e) => [e.id, e.label]));
+// A faixa de cada lead vem da etapa em que ele está — nunca é um campo separado.
+export const ETAPAS = [
+  { id: "novo", label: "Novo", lane: "frio", prazoDias: 1 },
+  { id: "contato_feito", label: "Contato feito", lane: "morno", prazoDias: 5 },
+  { id: "follow_up", label: "Follow-up", lane: "morno", prazoDias: 4 },
+  { id: "qualificado", label: "Reunião para agendar", lane: "quente", prazoDias: 3 },
+  { id: "reuniao_marcada", label: "Reunião marcada", lane: "quente", prazoDias: 7 },
+  { id: "reuniao_feita", label: "Reunião feita", lane: "quente", prazoDias: 3 },
+  { id: "no_show", label: "No-show", lane: "quente", prazoDias: 2 },
+  { id: "proposta_enviada", label: "Proposta enviada", lane: "ultra", prazoDias: 7 },
+  { id: "negociacao", label: "Negociação", lane: "ultra", prazoDias: 10 },
+];
+export const ETAPA_LABEL = Object.fromEntries(ETAPAS.map((e) => [e.id, e.label]));
 const ETAPA_PRAZO = Object.fromEntries(ETAPAS.map((e) => [e.id, e.prazoDias]));
-export const PESO_ETAPA = { novo: 0.05, contato_feito: 0.10, qualificado: 0.20, reuniao_marcada: 0.35, proposta_enviada: 0.55, negociacao: 0.75 };
+export const PESO_ETAPA = { novo: 0.05, contato_feito: 0.10, follow_up: 0.15, qualificado: 0.20, reuniao_marcada: 0.35, no_show: 0.15, reuniao_feita: 0.45, proposta_enviada: 0.55, negociacao: 0.75 };
+
+// Contatos: só ligação, WhatsApp e e-mail contam como tentativa de contato.
+const TIPOS_ATIVIDADE = { whatsapp: "WhatsApp", ligacao: "Ligação", email: "E-mail", reuniao: "Reunião", nota: "Nota" };
+const TIPOS_CONTATO = ["ligacao", "whatsapp", "email"];
+// Depois do 1º contato o próximo vem em 1 dia, depois 3, depois 7 (e segue em 7).
+const CADENCIA_DIAS = [1, 3, 7];
+const MAX_TENTATIVAS = 5;
+const ETAPAS_NUTRIR = ["novo", "contato_feito", "follow_up", "no_show"];
+
+function addDiasISO(dias) {
+  const d = new Date();
+  d.setDate(d.getDate() + dias);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function haDias(iso, hoje) {
+  const dias = Math.max(0, Math.round((hoje - new Date(new Date(iso).toDateString())) / 86400000));
+  return dias === 0 ? "hoje" : `há ${dias}d`;
+}
 
 const ORIGEM_LABEL = { trafego_pago: "Tráfego pago", indicacao: "Indicação", instagram: "Instagram", outbound: "Outbound", networking: "Networking", site: "Site" };
-const TEMP_LABEL = { quente: "Quente", morno: "Morno", frio: "Frio" };
-const TEMP_COLOR = { quente: "#E11D2E", morno: "#EAB308", frio: "#3B82F6" };
 const MOTIVOS_PERDA = ["Sem verba", "Achou caro", "Escolheu concorrente", "Sumiu / não respondeu mais", "Não era o perfil", "Momento errado"];
 
 function emptyLead() {
@@ -104,11 +131,6 @@ function LeadForm({ lead, onChange }) {
           {Object.entries(ORIGEM_LABEL).map(([v, l]) => <option key={v} value={v} style={{ backgroundColor: "var(--dropdown-bg)" }}>{l}</option>)}
         </select>
       </Field>
-      <Field label="Temperatura">
-        <select className={inputCls} style={inputStyle} value={lead.temperatura} onChange={(e) => set("temperatura", e.target.value)}>
-          {Object.entries(TEMP_LABEL).map(([v, l]) => <option key={v} value={v} style={{ backgroundColor: "var(--dropdown-bg)" }}>{l}</option>)}
-        </select>
-      </Field>
       <Field label="Plataformas de interesse">
         <div className="flex gap-2 pt-1">
           {["Google", "Meta"].map((p) => (
@@ -122,7 +144,11 @@ function LeadForm({ lead, onChange }) {
       </Field>
       <Field label="Etapa">
         <select className={inputCls} style={inputStyle} value={lead.etapa} onChange={(e) => set("etapa", e.target.value)}>
-          {ETAPAS.map((e) => <option key={e.id} value={e.id} style={{ backgroundColor: "var(--dropdown-bg)" }}>{e.label}</option>)}
+          {LANES.map((f) => (
+            <optgroup key={f.id} label={f.label}>
+              {ETAPAS.filter((e) => e.lane === f.id).map((e) => <option key={e.id} value={e.id} style={{ backgroundColor: "var(--dropdown-bg)" }}>{e.label}</option>)}
+            </optgroup>
+          ))}
           <option value="ganho" style={{ backgroundColor: "var(--dropdown-bg)" }}>Ganho</option>
           <option value="perdido" style={{ backgroundColor: "var(--dropdown-bg)" }}>Perdido</option>
         </select>
@@ -159,9 +185,10 @@ function ConversaoForm({ lead, dados, onChange }) {
   );
 }
 
-function LeadModal({ lead, isNew, atividades, onClose, onSave, onExcluir, salvando, onRegistrarAtividade, onConverter, onMarcarPerdido }) {
+function LeadModal({ lead, isNew, atividades, contatos, onClose, onSave, onExcluir, salvando, onRegistrarAtividade, onConverter, onMarcarPerdido }) {
   const [local, setLocal] = useState(lead);
   const [nota, setNota] = useState("");
+  const [tipoAtividade, setTipoAtividade] = useState("whatsapp");
   const [modo, setModo] = useState("editar"); // editar | converter | perder | excluir
   const [motivoPerda, setMotivoPerda] = useState("");
   const [conv, setConv] = useState(() => ({
@@ -187,11 +214,25 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onExcluir, salvan
 
               {!isNew && (
                 <div className="flex flex-col gap-2">
-                  <div className="text-xs tracking-normal" style={{ color: "var(--ink-muted)" }}>Registrar interação</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs tracking-normal" style={{ color: "var(--ink-muted)" }}>Registrar interação</div>
+                    <div className="text-xs" style={{ color: "var(--ink-faint)" }}>
+                      {contatos?.total ? `${contatos.total} contato${contatos.total > 1 ? "s" : ""} feito${contatos.total > 1 ? "s" : ""}` : "nenhum contato feito ainda"}
+                    </div>
+                  </div>
                   <div className="flex gap-2">
+                    <select className={inputCls} style={inputStyle} value={tipoAtividade} onChange={(e) => setTipoAtividade(e.target.value)}>
+                      {Object.entries(TIPOS_ATIVIDADE).map(([v, l]) => <option key={v} value={v} style={{ backgroundColor: "var(--dropdown-bg)" }}>{l}</option>)}
+                    </select>
                     <input className={inputCls + " flex-1"} style={inputStyle} value={nota} onChange={(e) => setNota(e.target.value)} placeholder="Ex: liguei, disse que vai decidir semana que vem..." />
                     <button
-                      onClick={() => { if (nota.trim()) { onRegistrarAtividade(local.id, nota.trim()); setNota(""); } }}
+                      onClick={async () => {
+                        if (!nota.trim()) return;
+                        const texto = nota.trim();
+                        setNota("");
+                        const upd = await onRegistrarAtividade(local.id, tipoAtividade, texto);
+                        if (upd) setLocal((prev) => ({ ...prev, ...upd }));
+                      }}
                       className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-md"
                       style={{ border: "1px solid var(--border)", color: "var(--ink)" }}>
                       <MessageSquare size={14} /> Registrar
@@ -209,7 +250,7 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onExcluir, salvan
                         <span style={{ color: "var(--ink-faint)" }}>{new Date(a.data).toLocaleDateString("pt-BR")} · </span>
                         {a.tipo === "mudanca_etapa"
                           ? <>Etapa: <b style={{ color: "var(--ink)" }}>{ETAPA_LABEL[a.etapa_de] || a.etapa_de}</b> → <b style={{ color: "var(--ink)" }}>{ETAPA_LABEL[a.etapa_para] || a.etapa_para}</b></>
-                          : a.descricao}
+                          : <>{TIPOS_ATIVIDADE[a.tipo] ? <b style={{ color: "var(--ink)" }}>{TIPOS_ATIVIDADE[a.tipo]} · </b> : null}{a.descricao}</>}
                       </div>
                     ))}
                   </div>
@@ -313,6 +354,8 @@ function LeadModal({ lead, isNew, atividades, onClose, onSave, onExcluir, salvan
 export default function Funil() {
   const [leads, setLeads] = useState([]);
   const [atividadesPorLead, setAtividadesPorLead] = useState({});
+  const [contatosPorLead, setContatosPorLead] = useState({});
+  const [recolhidas, setRecolhidas] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [selecionado, setSelecionado] = useState(null);
@@ -330,6 +373,14 @@ export default function Funil() {
     const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
     if (error) { setErro("Erro ao carregar leads: " + error.message); setLoaded(true); return; }
     setLeads(data || []);
+    const { data: contatos } = await supabase.from("lead_atividades").select("lead_id, data").in("tipo", TIPOS_CONTATO);
+    const mapa = {};
+    (contatos || []).forEach((a) => {
+      const m = mapa[a.lead_id] || (mapa[a.lead_id] = { total: 0, ultimo: null });
+      m.total += 1;
+      if (!m.ultimo || a.data > m.ultimo) m.ultimo = a.data;
+    });
+    setContatosPorLead(mapa);
     setLoaded(true);
   };
 
@@ -350,7 +401,6 @@ export default function Funil() {
     else if (filtro === "fechados") lista = enriquecidos.filter((l) => l.etapa === "ganho");
     else lista = enriquecidos.filter((l) => l.etapa !== "ganho" && l.etapa !== "perdido");
     if (filtro === "atrasados") lista = lista.filter((l) => l._alerta === "vermelho");
-    if (filtro === "quente") lista = lista.filter((l) => l.temperatura === "quente");
     if (busca.trim()) {
       const termo = busca.trim().toLowerCase();
       lista = lista.filter((l) => (l.nome || "").toLowerCase().includes(termo));
@@ -358,7 +408,15 @@ export default function Funil() {
     return lista;
   }, [enriquecidos, filtro, busca]);
 
-  const colunas = useMemo(() => ETAPAS.map((e) => ({ ...e, leads: filtrados.filter((l) => l.etapa === e.id) })), [filtrados]);
+  const faixas = useMemo(
+    () =>
+      LANES.map((f) => {
+        const colunas = ETAPAS.filter((e) => e.lane === f.id).map((e) => ({ ...e, leads: filtrados.filter((l) => l.etapa === e.id) }));
+        const todos = colunas.flatMap((c) => c.leads);
+        return { ...f, colunas, total: todos.length, valor: todos.reduce((sum, l) => sum + (Number(l.valor_mensal_estimado) || 0), 0) };
+      }),
+    [filtrados]
+  );
 
   const totalAtivos = leads.filter((l) => l.etapa !== "ganho" && l.etapa !== "perdido").length;
   const mrrPonderado = leads
@@ -386,12 +444,31 @@ export default function Funil() {
     setNovoAberto(false);
   };
 
-  const registrarAtividade = async (leadId, descricao) => {
-    const { data, error } = await supabase.from("lead_atividades").insert({ lead_id: leadId, tipo: "nota", descricao }).select().single();
-    if (error) { setErro("Erro ao registrar interação: " + error.message); return; }
-    await supabase.from("leads").update({ data_ultima_interacao: new Date().toISOString() }).eq("id", leadId);
+  const registrarAtividade = async (leadId, tipo, descricao) => {
+    const { data, error } = await supabase.from("lead_atividades").insert({ lead_id: leadId, tipo, descricao }).select().single();
+    if (error) { setErro("Erro ao registrar interação: " + error.message); return null; }
+
+    const agora = new Date().toISOString();
+    const atualizacao = { data_ultima_interacao: agora };
+
+    if (TIPOS_CONTATO.includes(tipo)) {
+      const lead = leads.find((l) => l.id === leadId);
+      const n = (contatosPorLead[leadId]?.total || 0) + 1;
+      // Se a próxima ação estava vencida (ou não existia), o contato a cumpriu: já agenda a próxima pela cadência.
+      const dataAcao = lead?.data_proxima_acao ? parseDate(lead.data_proxima_acao) : null;
+      if (!dataAcao || diffDays(dataAcao, hoje) <= 0) {
+        atualizacao.data_proxima_acao = addDiasISO(CADENCIA_DIAS[Math.min(n - 1, CADENCIA_DIAS.length - 1)]);
+        atualizacao.proxima_acao = `${n + 1}º contato`;
+      }
+      setContatosPorLead((prev) => ({ ...prev, [leadId]: { total: n, ultimo: agora } }));
+    }
+
+    const { error: erroLead } = await supabase.from("leads").update(atualizacao).eq("id", leadId);
+    if (erroLead) setErro("Interação salva, mas houve erro ao atualizar o lead: " + erroLead.message);
+
     setAtividadesPorLead((prev) => ({ ...prev, [leadId]: [data, ...(prev[leadId] || [])] }));
-    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, data_ultima_interacao: new Date().toISOString() } : l)));
+    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, ...atualizacao } : l)));
+    return atualizacao;
   };
 
   const converterEmCliente = async (lead, dados) => {
@@ -428,18 +505,6 @@ export default function Funil() {
     if (error) {
       setErro("Erro ao mover lead: " + error.message);
       setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, etapa: etapaAnterior } : l)));
-    }
-  };
-
-  const alterarTemperatura = async (leadId, novaTemp) => {
-    const lead = leads.find((l) => l.id === leadId);
-    if (!lead || lead.temperatura === novaTemp) return;
-    const anterior = lead.temperatura;
-    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, temperatura: novaTemp } : l)));
-    const { error } = await supabase.from("leads").update({ temperatura: novaTemp }).eq("id", leadId);
-    if (error) {
-      setErro("Erro ao atualizar temperatura: " + error.message);
-      setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, temperatura: anterior } : l)));
     }
   };
 
@@ -512,7 +577,6 @@ export default function Funil() {
                   <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>{l.nome}</div>
                   <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
                 </div>
-                <Badge color={TEMP_COLOR[l.temperatura]}>{TEMP_LABEL[l.temperatura]}</Badge>
               </div>
               {l.motivo_perda && (
                 <div className="text-xs mt-2" style={{ color: "var(--ink-muted)" }}>Motivo: <b style={{ color: "var(--ink)" }}>{l.motivo_perda}</b></div>
@@ -548,70 +612,87 @@ export default function Funil() {
       )}
 
       {filtro !== "perdidos" && filtro !== "fechados" && (
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        {colunas.map((col) => {
-          const emFoco = colunaSobre === col.id;
+      <div className="flex flex-col gap-4">
+        {faixas.map((faixa) => {
+          const fechada = recolhidas.includes(faixa.id);
           return (
-            <div key={col.id} className="flex flex-col gap-2 w-[240px] shrink-0">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-semibold tracking-normal" style={{ color: "var(--ink-muted)" }}>{col.label}</span>
-                <span className="text-xs" style={{ color: "var(--ink-faint)" }}>{col.leads.length}</span>
-              </div>
-              <div
-                className="flex flex-col gap-2 rounded-xl transition-colors duration-100 min-h-[60px]"
-                style={{
-                  outline: emFoco ? `2px dashed ${PURPLE}` : "2px dashed transparent",
-                  outlineOffset: 4,
-                  backgroundColor: emFoco ? PURPLE + "14" : "transparent",
-                }}
-                onDragOver={(e) => { e.preventDefault(); if (colunaSobre !== col.id) setColunaSobre(col.id); }}
-                onDragLeave={() => setColunaSobre((c) => (c === col.id ? null : c))}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  const leadId = e.dataTransfer.getData("text/plain");
-                  moverEtapa(leadId, col.id);
-                  setColunaSobre(null);
-                  setArrastando(null);
-                }}
+            <div key={faixa.id} className="rounded-xl p-4" style={{ border: "1px solid var(--card-border)", backgroundColor: "var(--card-bg-soft)" }}>
+              <button
+                onClick={() => setRecolhidas((prev) => (prev.includes(faixa.id) ? prev.filter((x) => x !== faixa.id) : [...prev, faixa.id]))}
+                className="flex items-center gap-2 w-full text-left"
               >
-                {col.leads.map((l) => {
-                  const estilo = ALERTA_STYLE[l._alerta];
-                  const sendoArrastado = arrastando === l.id;
-                  return (
-                    <div key={l.id}
-                      draggable
-                      onDragStart={(e) => { setArrastando(l.id); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", l.id); }}
-                      onDragEnd={() => { setArrastando(null); setColunaSobre(null); }}
-                      onClick={() => abrirLead(l)}
-                      className="rounded-xl p-3 cursor-grab active:cursor-grabbing transition-transform duration-150 hover:-translate-y-0.5"
-                      style={{
-                        border: `1px solid ${estilo.border}55`, borderLeft: `3px solid ${estilo.border}`, backgroundColor: estilo.bg,
-                        opacity: sendoArrastado ? 0.35 : 1,
-                      }}>
-                      <div className="text-sm font-medium mb-1" style={{ color: "var(--ink)" }}>{l.nome}</div>
-                      <div className="text-xs mb-2" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <select
-                          value={l.temperatura}
-                          draggable={false}
-                          onClick={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                          onChange={(e) => alterarTemperatura(l.id, e.target.value)}
-                          title="Mudar temperatura"
-                          className="text-xs font-medium rounded-full pl-2.5 pr-1.5 py-0.5 outline-none cursor-pointer appearance-none"
-                          style={{ backgroundColor: TEMP_COLOR[l.temperatura] + "22", color: TEMP_COLOR[l.temperatura], border: "none" }}
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: faixa.cor }} />
+                <span className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{faixa.label}</span>
+                <span className="text-xs" style={{ color: "var(--ink-faint)" }}>
+                  {faixa.total} lead{faixa.total === 1 ? "" : "s"}{faixa.valor > 0 ? ` · ${fmtMoney(faixa.valor)}/mês` : ""}
+                </span>
+                <ChevronDown size={16} className="ml-auto transition-transform" style={{ color: "var(--ink-muted)", transform: fechada ? "rotate(-90deg)" : "none" }} />
+              </button>
+
+              {!fechada && (
+                <div className="flex gap-3 overflow-x-auto pb-2 mt-3">
+                  {faixa.colunas.map((col) => {
+                    const emFoco = colunaSobre === col.id;
+                    return (
+                      <div key={col.id} className="flex flex-col gap-2 w-[240px] shrink-0">
+                        <div className="flex items-center justify-between px-1">
+                          <span className="text-xs font-semibold tracking-normal" style={{ color: "var(--ink-muted)" }}>{col.label}</span>
+                          <span className="text-xs" style={{ color: "var(--ink-faint)" }}>{col.leads.length}</span>
+                        </div>
+                        <div
+                          className="flex flex-col gap-2 rounded-xl transition-colors duration-100 min-h-[60px]"
+                          style={{
+                            outline: emFoco ? `2px dashed ${PURPLE}` : "2px dashed transparent",
+                            outlineOffset: 4,
+                            backgroundColor: emFoco ? PURPLE + "14" : "transparent",
+                          }}
+                          onDragOver={(e) => { e.preventDefault(); if (colunaSobre !== col.id) setColunaSobre(col.id); }}
+                          onDragLeave={() => setColunaSobre((c) => (c === col.id ? null : c))}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const leadId = e.dataTransfer.getData("text/plain");
+                            moverEtapa(leadId, col.id);
+                            setColunaSobre(null);
+                            setArrastando(null);
+                          }}
                         >
-                          {Object.entries(TEMP_LABEL).map(([value, label]) => (
-                            <option key={value} value={value} style={{ backgroundColor: "var(--dropdown-bg)", color: "var(--ink)" }}>{label}</option>
-                          ))}
-                        </select>
-                        {l.data_proxima_acao && <span className="text-xs flex items-center gap-1" style={{ color: "var(--ink-muted)" }}><Clock size={11} /> {new Date(l.data_proxima_acao + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>}
+                          {col.leads.map((l) => {
+                            const estilo = ALERTA_STYLE[l._alerta];
+                            const sendoArrastado = arrastando === l.id;
+                            const contatos = contatosPorLead[l.id];
+                            const demaisTentativas = contatos?.total >= MAX_TENTATIVAS && ETAPAS_NUTRIR.includes(l.etapa);
+                            return (
+                              <div key={l.id}
+                                draggable
+                                onDragStart={(e) => { setArrastando(l.id); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", l.id); }}
+                                onDragEnd={() => { setArrastando(null); setColunaSobre(null); }}
+                                onClick={() => abrirLead(l)}
+                                className="rounded-xl p-3 cursor-grab active:cursor-grabbing transition-transform duration-150 hover:-translate-y-0.5"
+                                style={{
+                                  border: `1px solid ${estilo.border}55`, borderLeft: `3px solid ${estilo.border}`, backgroundColor: estilo.bg,
+                                  opacity: sendoArrastado ? 0.35 : 1,
+                                }}>
+                                <div className="text-sm font-medium mb-1" style={{ color: "var(--ink)" }}>{l.nome}</div>
+                                <div className="text-xs mb-2" style={{ color: "var(--ink-muted)" }}>{l.nicho || "—"}{l.valor_mensal_estimado ? ` · ${fmtMoney(l.valor_mensal_estimado)}` : ""}</div>
+                                <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
+                                  <span className="text-xs flex items-center gap-1" style={{ color: "var(--ink-muted)" }}>
+                                    <Phone size={11} /> {contatos ? `${contatos.total}º contato · ${haDias(contatos.ultimo, hoje)}` : "sem contato"}
+                                  </span>
+                                  {l.data_proxima_acao && <span className="text-xs flex items-center gap-1" style={{ color: "var(--ink-muted)" }}><Clock size={11} /> {new Date(l.data_proxima_acao + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>}
+                                </div>
+                                {demaisTentativas && (
+                                  <div className="mt-2"><Badge color="#E11D2E">{contatos.total} tentativas · avaliar encerrar</Badge></div>
+                                )}
+                              </div>
+                            );
+                          })}
+                          {col.leads.length === 0 && <div className="text-xs text-center py-6 rounded-xl" style={{ color: "var(--ink-faint)", border: "1px dashed var(--border)" }}>vazio</div>}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-                {col.leads.length === 0 && <div className="text-xs text-center py-6 rounded-xl" style={{ color: "#3B3448", border: "1px dashed var(--border)" }}>vazio</div>}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           );
         })}
@@ -620,11 +701,11 @@ export default function Funil() {
 
       {novoAberto && (
         <LeadModal lead={emptyLead()} isNew atividades={[]} onClose={() => setNovoAberto(false)} onSave={salvarLead} salvando={salvando}
-          onRegistrarAtividade={() => {}} onConverter={() => {}} onMarcarPerdido={() => {}} onExcluir={() => {}} />
+          onRegistrarAtividade={async () => null} onConverter={() => {}} onMarcarPerdido={() => {}} onExcluir={() => {}} />
       )}
 
       {selecionado && (
-        <LeadModal lead={selecionado} isNew={false} atividades={atividadesPorLead[selecionado.id] || []}
+        <LeadModal lead={selecionado} isNew={false} atividades={atividadesPorLead[selecionado.id] || []} contatos={contatosPorLead[selecionado.id]}
           onClose={() => setSelecionado(null)} onSave={salvarLead} salvando={salvando}
           onRegistrarAtividade={registrarAtividade} onConverter={converterEmCliente} onMarcarPerdido={marcarPerdido} onExcluir={excluirLead} />
       )}

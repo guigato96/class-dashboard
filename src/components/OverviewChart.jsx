@@ -10,6 +10,7 @@ export default function OverviewChart({ data }) {
       ]}
       labels={data.map((d) => d.mes)}
       tipo="bar"
+      height={220}
       unidade="money"
     />
   );

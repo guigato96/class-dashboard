@@ -43,7 +43,7 @@ function Amostra({ estilo, tipo }) {
 }
 
 // series: [{ key, label, values: number[] }]; labels: string[] (um por mês)
-export default function MetricChart({ series, labels, tipo, unidade, height = 180 }) {
+export default function MetricChart({ series, labels, tipo, unidade, height = 180, barMax = 14 }) {
   const [hover, setHover] = useState(null);
   const caixa = useRef(null);
   const [width, setWidth] = useState(560);
@@ -74,7 +74,7 @@ export default function MetricChart({ series, labels, tipo, unidade, height = 18
   const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => niceMax * f);
   const base = yFor(0);
 
-  const barW = Math.min(14, (bandW * 0.6) / series.length);
+  const barW = Math.min(barMax, (bandW * 0.6) / series.length);
   const gap = 4;
 
   return (

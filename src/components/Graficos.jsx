@@ -222,7 +222,8 @@ export default function Graficos() {
       const inicioRef = ultimosMeses(12)[0].ref;
       const [{ data: pagamentos }, { data: despesas }, { data: entradas }, { data: clientes }] = await Promise.all([
         supabase.from("historico_pagamentos").select("cliente_id, mes_referencia, valor_pago, status").gte("mes_referencia", inicioRef),
-        supabase.from("historico_despesas").select("mes_referencia, valor, pago").gte("mes_referencia", inicioRef),
+        // só despesas ainda ativas — igual à aba Despesas, pra os totais baterem
+        supabase.from("historico_despesas").select("mes_referencia, valor, pago, despesas!inner(ativo)").eq("despesas.ativo", true).gte("mes_referencia", inicioRef),
         supabase.from("entradas_extras").select("mes_referencia, valor, recebido").eq("ativo", true).gte("mes_referencia", inicioRef),
         supabase.from("clientes").select("data_inicio_contrato, data_fim_contrato"),
       ]);

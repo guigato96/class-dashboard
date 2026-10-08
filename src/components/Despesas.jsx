@@ -106,8 +106,8 @@ function DespesaForm({ despesa, onSave, onDelete, onCancel, isNew, salvando, mes
   const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)" }}>
-      <div className="col-span-2 md:col-span-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 md:p-5" style={{ backgroundColor: "var(--panel-bg)" }}>
+      <div className="col-span-full">
         <Field label="Descrição">
           <input className={inputCls} style={inputStyle} value={local.descricao} onChange={(e) => set("descricao", e.target.value)} placeholder="Ex: Assinatura Meta Ads Manager" />
         </Field>
@@ -138,7 +138,7 @@ function DespesaForm({ despesa, onSave, onDelete, onCancel, isNew, salvando, mes
         </select>
       </Field>
 
-      <div className="col-span-2 md:col-span-3 flex flex-col gap-3">
+      <div className="col-span-full flex flex-col gap-3">
         <label className="flex items-center gap-2 text-xs" style={{ color: "var(--ink-muted)" }}>
           <input
             type="checkbox"
@@ -184,13 +184,13 @@ function DespesaForm({ despesa, onSave, onDelete, onCancel, isNew, salvando, mes
         )}
       </div>
 
-      <div className="col-span-2 md:col-span-3">
+      <div className="col-span-full">
         <Field label="Observação">
           <textarea className={inputCls} style={{ ...inputStyle, minHeight: 60 }} value={local.observacao || ""} onChange={(e) => set("observacao", e.target.value)} placeholder="Opcional" />
         </Field>
       </div>
 
-      <div className="col-span-2 md:col-span-3 flex justify-between items-center pt-2">
+      <div className="col-span-full flex justify-between items-center pt-2">
         <div>
           {!isNew && (
             <button
@@ -455,7 +455,7 @@ export default function Despesas() {
                     tabIndex={0}
                     onClick={() => { setExpandedId(aberto ? null : d.id); setNovoAberto(false); }}
                     onKeyDown={(e) => { if (e.key === "Enter") { setExpandedId(aberto ? null : d.id); setNovoAberto(false); } }}
-                    className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
+                    className="w-full flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 md:px-5 py-4 text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-4 flex-wrap">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: corStatus }} />
@@ -474,7 +474,7 @@ export default function Despesas() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 justify-between md:justify-end">
                       <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <span className="text-xs" style={{ color: corStatus }}>{d.pago ? "Pago" : "Pendente"}</span>
                         <PaymentSwitch

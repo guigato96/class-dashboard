@@ -95,8 +95,8 @@ function EntradaForm({ entrada, onSave, onDelete, onCancel, isNew, salvando }) {
   const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)" }}>
-      <div className="col-span-2 md:col-span-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 md:p-5" style={{ backgroundColor: "var(--panel-bg)" }}>
+      <div className="col-span-full">
         <Field label="Descrição">
           <input className={inputCls} style={inputStyle} value={local.descricao} onChange={(e) => set("descricao", e.target.value)} placeholder="Ex: Venda de página para Clínica X" />
         </Field>
@@ -124,7 +124,7 @@ function EntradaForm({ entrada, onSave, onDelete, onCancel, isNew, salvando }) {
         <input className={inputCls} style={inputStyle} type="date" value={local.data_entrada || hoje()} onChange={(e) => set("data_entrada", e.target.value)} />
       </Field>
 
-      <div className="col-span-2 md:col-span-3">
+      <div className="col-span-full">
         <Field label="Status do recebimento">
           <select className={inputCls} style={{ ...inputStyle, maxWidth: 220 }} value={local.recebido ? "recebido" : "pendente"} onChange={(e) => set("recebido", e.target.value === "recebido")}>
             <option value="pendente">Pendente</option>
@@ -133,13 +133,13 @@ function EntradaForm({ entrada, onSave, onDelete, onCancel, isNew, salvando }) {
         </Field>
       </div>
 
-      <div className="col-span-2 md:col-span-3">
+      <div className="col-span-full">
         <Field label="Observação">
           <textarea className={inputCls} style={{ ...inputStyle, minHeight: 60 }} value={local.observacao || ""} onChange={(e) => set("observacao", e.target.value)} placeholder="Opcional" />
         </Field>
       </div>
 
-      <div className="col-span-2 md:col-span-3 flex justify-between items-center pt-2">
+      <div className="col-span-full flex justify-between items-center pt-2">
         <div>
           {!isNew && (
             <button
@@ -335,7 +335,7 @@ export default function EntradasExtras() {
                     tabIndex={0}
                     onClick={() => { setExpandedId(aberto ? null : e.id); setNovoAberto(false); }}
                     onKeyDown={(ev) => { if (ev.key === "Enter") { setExpandedId(aberto ? null : e.id); setNovoAberto(false); } }}
-                    className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
+                    className="w-full flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 md:px-5 py-4 text-left cursor-pointer"
                   >
                     <div className="flex items-center gap-4 flex-wrap">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: corStatus }} />
@@ -344,7 +344,7 @@ export default function EntradasExtras() {
                         <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{e.categoria} · {fmtMoney(e.valor)} · {fmtDate(e.data_entrada)}</div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 justify-between md:justify-end">
                       <div className="flex items-center gap-1.5" onClick={(ev) => ev.stopPropagation()}>
                         <span className="text-xs" style={{ color: corStatus }}>{e.recebido ? "Recebido" : "Pendente"}</span>
                         <PaymentSwitch

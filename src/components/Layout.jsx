@@ -23,7 +23,7 @@ export default function Layout({ aba, onAbaChange, onSignOut, children, theme, o
     <div
       style={{
         backgroundColor: "var(--bg)",
-        minHeight: "100vh",
+        minHeight: "100dvh",
         fontFamily: "Inter, sans-serif",
       }}
       className="flex"
@@ -35,12 +35,12 @@ export default function Layout({ aba, onAbaChange, onSignOut, children, theme, o
       `}</style>
 
       <aside
-        className="shrink-0 flex flex-col transition-[width] duration-200"
+        className="hidden md:flex shrink-0 flex-col transition-[width] duration-200"
         style={{
           width: aberta ? 240 : 76,
           borderRight: "1px solid var(--card-border)",
           backgroundColor: "var(--sidebar-bg)",
-          minHeight: "100vh",
+          minHeight: "100dvh",
           padding: aberta ? "20px 16px" : "20px 14px",
         }}
       >
@@ -94,45 +94,70 @@ export default function Layout({ aba, onAbaChange, onSignOut, children, theme, o
 
       </aside>
 
-      <main className="flex-1 p-6 min-w-0">
-        <div className="flex justify-end items-center gap-2 mb-4">
-          {onToggleValores && (
-            <button
-              onClick={onToggleValores}
-              title={valoresOcultos ? "Mostrar valores" : "Ocultar valores"}
-              aria-label={valoresOcultos ? "Mostrar valores" : "Ocultar valores"}
-              className="flex items-center justify-center rounded-full p-2 transition-colors hover:bg-[var(--hover-bg)]"
-              style={{ border: "1px solid var(--border)", color: valoresOcultos ? PURPLE : "var(--ink-muted)" }}
-            >
-              {valoresOcultos ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          )}
-          {onToggleTheme && (
-            <button
-              onClick={onToggleTheme}
-              title={theme === "dark" ? "Modo claro" : "Modo escuro"}
-              aria-label={theme === "dark" ? "Modo claro" : "Modo escuro"}
-              className="flex items-center gap-2 rounded-full px-3 py-2 text-xs transition-colors hover:bg-[var(--hover-bg)]"
-              style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }}
-            >
-              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-              {theme === "dark" ? "Modo claro" : "Modo escuro"}
-            </button>
-          )}
-          {onSignOut && (
-            <button
-              onClick={onSignOut}
-              title="Sair"
-              aria-label="Sair"
-              className="flex items-center gap-2 rounded-full px-3 py-2 text-xs transition-colors hover:bg-[var(--hover-bg)]"
-              style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }}
-            >
-              <LogOut size={16} /> Sair
-            </button>
-          )}
+      <main className="flex-1 px-4 pt-3 pb-28 md:p-6 min-w-0">
+        <div className="flex justify-between md:justify-end items-center gap-2 mb-4">
+          <img src={logoClass} alt="Class" className="h-5 w-auto app-logo md:hidden" />
+          <div className="flex items-center gap-2">
+            {onToggleValores && (
+              <button
+                onClick={onToggleValores}
+                title={valoresOcultos ? "Mostrar valores" : "Ocultar valores"}
+                aria-label={valoresOcultos ? "Mostrar valores" : "Ocultar valores"}
+                className="flex items-center justify-center rounded-full p-2.5 md:p-2 transition-colors hover:bg-[var(--hover-bg)]"
+                style={{ border: "1px solid var(--border)", color: valoresOcultos ? PURPLE : "var(--ink-muted)" }}
+              >
+                {valoresOcultos ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            )}
+            {onToggleTheme && (
+              <button
+                onClick={onToggleTheme}
+                title={theme === "dark" ? "Modo claro" : "Modo escuro"}
+                aria-label={theme === "dark" ? "Modo claro" : "Modo escuro"}
+                className="flex items-center gap-2 rounded-full p-2.5 md:px-3 md:py-2 text-xs transition-colors hover:bg-[var(--hover-bg)]"
+                style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }}
+              >
+                {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+                <span className="hidden md:inline">{theme === "dark" ? "Modo claro" : "Modo escuro"}</span>
+              </button>
+            )}
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                title="Sair"
+                aria-label="Sair"
+                className="flex items-center gap-2 rounded-full p-2.5 md:px-3 md:py-2 text-xs transition-colors hover:bg-[var(--hover-bg)]"
+                style={{ border: "1px solid var(--border)", color: "var(--ink-muted)" }}
+              >
+                <LogOut size={16} />
+                <span className="hidden md:inline">Sair</span>
+              </button>
+            )}
+          </div>
         </div>
         {children}
       </main>
+
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 flex"
+        style={{ backgroundColor: "var(--sidebar-bg)", borderTop: "1px solid var(--card-border)", paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {ABAS.map((t) => {
+          const ativo = aba === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => onAbaChange(t.id)}
+              aria-label={t.label}
+              className="flex-1 flex flex-col items-center gap-1 pt-2.5 pb-2 min-w-0"
+              style={{ color: ativo ? PURPLE : "var(--ink-muted)" }}
+            >
+              <t.icon size={20} />
+              <span className="text-[10px] font-medium truncate max-w-full px-0.5">{t.label}</span>
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 }

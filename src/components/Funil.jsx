@@ -106,7 +106,7 @@ function LeadForm({ lead, onChange }) {
     });
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Field label="Nome / empresa">
         <input className={inputCls} style={inputStyle} value={lead.nome} onChange={(e) => set("nome", e.target.value)} placeholder="Ex: Clínica Vitalis" />
       </Field>
@@ -154,7 +154,7 @@ function LeadForm({ lead, onChange }) {
         </select>
       </Field>
 
-      <div className="col-span-2">
+      <div className="col-span-full">
         <Field label="Próxima ação">
           <input className={inputCls} style={inputStyle} value={lead.proxima_acao || ""} onChange={(e) => set("proxima_acao", e.target.value)} placeholder="Ex: ligar cobrando resposta da proposta" />
         </Field>
@@ -169,7 +169,7 @@ function LeadForm({ lead, onChange }) {
 function ConversaoForm({ lead, dados, onChange }) {
   const set = (field, value) => onChange({ ...dados, [field]: value });
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Field label="Nome do cliente"><input className={inputCls} style={inputStyle} value={dados.nome} onChange={(e) => set("nome", e.target.value)} /></Field>
       <Field label="Nicho"><input className={inputCls} style={inputStyle} value={dados.nicho || ""} onChange={(e) => set("nicho", e.target.value)} /></Field>
       <Field label="Contato responsável"><input className={inputCls} style={inputStyle} value={dados.contato_nome || ""} onChange={(e) => set("contato_nome", e.target.value)} /></Field>
@@ -178,7 +178,7 @@ function ConversaoForm({ lead, dados, onChange }) {
       <Field label="Dia de vencimento"><input className={inputCls} style={inputStyle} type="number" min="1" max="31" value={dados.dia_vencimento} onChange={(e) => set("dia_vencimento", e.target.value)} placeholder="10" /></Field>
       <Field label="Início do contrato"><input className={inputCls} style={inputStyle} type="date" value={dados.data_inicio_contrato} onChange={(e) => set("data_inicio_contrato", e.target.value)} /></Field>
       <Field label="Prazo do contrato (meses)"><input className={inputCls} style={inputStyle} type="number" value={dados.prazo_contrato_meses} onChange={(e) => set("prazo_contrato_meses", e.target.value)} /></Field>
-      <div className="col-span-2 text-xs" style={{ color: "var(--ink-muted)" }}>
+      <div className="col-span-full text-xs" style={{ color: "var(--ink-muted)" }}>
         Depois de criado, o resto (grupo de WhatsApp, renovação, etc.) você completa direto na aba Clientes.
       </div>
     </div>

@@ -161,7 +161,7 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
   const inputStyle = { border: "1px solid var(--border)", color: "var(--ink)" };
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 p-5" style={{ backgroundColor: "var(--panel-bg)" }}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 md:p-5" style={{ backgroundColor: "var(--panel-bg)" }}>
       <Field label="Nome do cliente">
         <input className={inputCls} style={inputStyle} value={local.nome} onChange={(e) => set("nome", e.target.value)} placeholder="Ex: Clínica Vitalis" />
       </Field>
@@ -258,18 +258,18 @@ function ClientForm({ client, onSave, onDelete, onCancel, isNew, salvando, mesLa
         <input className={inputCls} style={inputStyle} type="date" value={local.data_fim_contrato || ""} onChange={(e) => set("data_fim_contrato", e.target.value)} />
       </Field>
 
-      <div className="col-span-2 md:col-span-3">
+      <div className="col-span-full">
         <Field label="Observação / motivo do status">
           <textarea className={inputCls} style={{ ...inputStyle, minHeight: 60 }} value={local.motivo_observacao || ""} onChange={(e) => set("motivo_observacao", e.target.value)} placeholder="Ex: reclamou do CPL na última reunião, pediu revisão de oferta..." />
         </Field>
       </div>
-      <div className="col-span-2 md:col-span-3">
+      <div className="col-span-full">
         <Field label="Oportunidade de upsell">
           <input className={inputCls} style={inputStyle} value={local.oportunidade_upsell || ""} onChange={(e) => set("oportunidade_upsell", e.target.value)} placeholder="Ex: só tem Meta, dá pra oferecer Google Ads" />
         </Field>
       </div>
 
-      <div className="col-span-2 md:col-span-3 flex justify-between items-center pt-2">
+      <div className="col-span-full flex justify-between items-center pt-2">
         <div>
           {!isNew && (
             <button
@@ -366,7 +366,7 @@ function SaudeCard({ positivos, neutros, criticos }) {
 
   return (
     <div
-      className="rounded-xl p-4 flex-1 min-w-[200px] transition-transform duration-200 hover:-translate-y-0.5"
+      className="rounded-xl p-4 flex-1 min-w-[150px] md:min-w-[200px] transition-transform duration-200 hover:-translate-y-0.5"
       style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}
     >
       <div className="text-xs tracking-normal mb-3" style={{ color: "var(--ink-muted)" }}>Saúde da carteira</div>
@@ -793,7 +793,7 @@ export default function GestaoClientes() {
                 tabIndex={0}
                 onClick={() => { setExpandedId(aberto ? null : c.id); setNovoAberto(false); }}
                 onKeyDown={(e) => { if (e.key === "Enter") { setExpandedId(aberto ? null : c.id); setNovoAberto(false); } }}
-                className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
+                className="w-full flex flex-col md:flex-row md:items-center justify-between gap-3 px-4 md:px-5 py-4 text-left cursor-pointer"
               >
                 <div className="flex items-center gap-4 flex-wrap">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: risco.border }} />
@@ -833,7 +833,7 @@ export default function GestaoClientes() {
                     {c.tendencia === "estavel" && <Minus size={14} />}
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 justify-between md:justify-end">
                   <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <Badge color={PAG_COLOR[c.status_pagamento_mes]}>
                       {PAG_LABEL[c.status_pagamento_mes]}

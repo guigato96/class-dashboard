@@ -54,3 +54,10 @@ body {
 [data-theme="light"] .app-logo {
   filter: brightness(0);
 }
+
+/* iOS dá zoom automático em campos com fonte menor que 16px */
+@media (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Target, Trophy, Ban, Percent, Thermometer, UserX } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import { ultimosMeses, mesDaData } from "../lib/mes";
-import { fmtMoney, StatCard } from "./ui";
+import { StatCard } from "./ui";
+import MetricChart from "./MetricChart";
 import { ETAPAS, LANES, ETAPA_LABEL } from "./Funil";
 
 const LANE_COR = Object.fromEntries(LANES.map((f) => [f.id, f.cor]));
@@ -16,51 +17,11 @@ function BarraHorizontal({ label, valor, total, cor }) {
   const pct = total > 0 ? (valor / total) * 100 : 0;
   return (
     <div className="flex items-center gap-3">
-      <div className="w-32 shrink-0 text-xs" style={{ color: "var(--ink-muted)" }}>{label}</div>
+      <div className="w-36 shrink-0 text-xs" style={{ color: "var(--ink-muted)" }}>{label}</div>
       <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--track-bg)" }}>
         <div style={{ width: `${pct}%`, backgroundColor: cor, height: "100%" }} />
       </div>
       <div className="w-8 shrink-0 text-xs text-right font-variant-numeric-tabular" style={{ color: "var(--ink)" }}>{valor}</div>
-    </div>
-  );
-}
-
-function LeadsPorMesChart({ data }) {
-  const [hover, setHover] = useState(null);
-  const width = 640, height = 180, padLeft = 28, padBottom = 24, padTop = 14;
-  const plotW = width - padLeft - 12, plotH = height - padTop - padBottom;
-  const max = Math.max(1, ...data.map((d) => d.total));
-  const niceMax = Math.ceil(max / 4) * 4 || 4;
-  const bandW = plotW / data.length;
-  const barW = Math.min(28, bandW * 0.55);
-  const yFor = (v) => padTop + plotH - (v / niceMax) * plotH;
-
-  return (
-    <div className="relative">
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full" style={{ overflow: "visible" }}>
-        {[0, niceMax * 0.5, niceMax].map((t, i) => (
-          <line key={i} x1={padLeft} x2={width - 8} y1={yFor(t)} y2={yFor(t)} stroke="var(--card-border)" strokeWidth="1" />
-        ))}
-        {data.map((d, i) => {
-          const x = padLeft + i * bandW + (bandW - barW) / 2;
-          const barH = (d.total / niceMax) * plotH;
-          const y = padTop + plotH - barH;
-          const isHover = hover === i;
-          return (
-            <g key={d.mes} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} style={{ cursor: "pointer" }}>
-              <rect x={x - 6} y={padTop} width={barW + 12} height={plotH} fill="transparent" />
-              <rect x={x} y={barH > 0 ? y : padTop + plotH - 1} width={barW} height={Math.max(barH, 1)} rx="4" fill="#8B5CF6" opacity={isHover ? 1 : 0.7} />
-              <text x={x + barW / 2} y={height - 6} textAnchor="middle" fontSize="10" fill="var(--ink-muted)" fontFamily="Inter, sans-serif">{d.mes}</text>
-            </g>
-          );
-        })}
-      </svg>
-      {hover !== null && (
-        <div className="absolute pointer-events-none rounded-md px-2.5 py-1.5 text-xs" style={{ backgroundColor: "var(--header-bg)", border: "1px solid var(--hover-bg-soft)", color: "var(--ink)", left: `${((hover + 0.5) / data.length) * 100}%`, top: 0, transform: "translate(-50%, -110%)", whiteSpace: "nowrap" }}>
-          <div style={{ color: "var(--ink-muted)" }}>{data[hover].mes}</div>
-          <div className="font-semibold">{data[hover].total} leads</div>
-        </div>
-      )}
     </div>
   );
 }
@@ -176,7 +137,7 @@ export default function VisaoComercial() {
         Visão geral <span style={{ color: "#8B5CF6" }}>comercial</span>
       </h1>
 
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         <StatCard label="Leads no mês" value={leadsNoMes} icon={Target} accent="#A78BFA" />
         <StatCard label="Ganhos no mês" value={ganhosNoMes} icon={Trophy} accent="#22C55E" />
         <StatCard label="Perdidos no mês" value={perdidosNoMes} icon={Ban} accent="#E11D2E" />
@@ -187,48 +148,57 @@ export default function VisaoComercial() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-          <div className="text-xs tracking-normal mb-4" style={{ color: "var(--ink-muted)" }}>Faixas da carteira ativa ({ativos.length})</div>
+          <div className="text-sm font-medium mb-4" style={{ color: "var(--ink)" }}>Faixas da carteira ativa ({ativos.length})</div>
           <div className="flex flex-col gap-3">
             {porFaixa.map((f) => <BarraHorizontal key={f.id} label={f.label} valor={f.valor} total={f.total} cor={f.cor} />)}
           </div>
         </div>
 
         <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-          <div className="text-xs tracking-normal mb-4" style={{ color: "var(--ink-muted)" }}>Onde o funil está agora</div>
+          <div className="text-sm font-medium mb-4" style={{ color: "var(--ink)" }}>Onde o funil está agora</div>
           <div className="flex flex-col gap-3">
             {porEtapa.map((e) => <BarraHorizontal key={e.id} label={e.label} valor={e.valor} total={e.total} cor={e.cor} />)}
           </div>
         </div>
       </div>
 
-      <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-        <div className="text-xs tracking-normal mb-1" style={{ color: "var(--ink-muted)" }}>Funil de conversão</div>
-        <div className="text-xs mb-4" style={{ color: "var(--ink-faint)" }}>Quantos leads já chegaram a cada etapa · % em relação à etapa anterior</div>
-        <div className="flex flex-col gap-3">
-          {funilConversao.map((e) => (
-            <div key={e.id} className="flex items-center gap-3">
-              <div className="flex-1 min-w-0"><BarraHorizontal label={e.label} valor={e.valor} total={e.total} cor="var(--ink)" /></div>
-              <div className="w-10 shrink-0 text-xs text-right" style={{ color: "var(--ink-muted)" }}>{e.conv === null ? "" : `${e.conv}%`}</div>
-            </div>
-          ))}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+          <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>Funil de conversão</div>
+          <div className="text-xs mb-4" style={{ color: "var(--ink-muted)" }}>Quantos leads já chegaram a cada etapa · % em relação à etapa anterior</div>
+          <div className="flex flex-col gap-3">
+            {funilConversao.map((e) => (
+              <div key={e.id} className="flex items-center gap-3">
+                <div className="flex-1 min-w-0"><BarraHorizontal label={e.label} valor={e.valor} total={e.total} cor="var(--ink)" /></div>
+                <div className="w-10 shrink-0 text-xs text-right" style={{ color: "var(--ink-muted)" }}>{e.conv === null ? "" : `${e.conv}%`}</div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-        <div className="text-xs tracking-normal mb-3" style={{ color: "var(--ink-muted)" }}>Leads entrados · últimos 6 meses</div>
-        <LeadsPorMesChart data={leadsPorMes} />
+        <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+          <div className="text-sm font-medium mb-3" style={{ color: "var(--ink)" }}>Leads entrados · últimos 6 meses</div>
+          <MetricChart
+            series={[{ key: "leads", label: "Leads", values: leadsPorMes.map((m) => m.total) }]}
+            labels={leadsPorMes.map((m) => m.mes)}
+            tipo="bar"
+            unidade="int"
+            height={200}
+            barMax={34}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-          <div className="text-xs tracking-normal mb-4" style={{ color: "var(--ink-muted)" }}>Clientes fechados por origem</div>
+          <div className="text-sm font-medium mb-4" style={{ color: "var(--ink)" }}>Clientes fechados por origem</div>
           {porOrigem.length === 0
             ? <div className="text-xs py-4 text-center" style={{ color: "var(--ink-faint)" }}>Nenhum fechamento ainda</div>
             : <div className="flex flex-col gap-3">{porOrigem.map((o) => <BarraHorizontal key={o.id} label={o.label} valor={o.valor} total={o.total} cor="#22C55E" />)}</div>}
         </div>
 
         <div className="rounded-xl p-4" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-          <div className="text-xs tracking-normal mb-4" style={{ color: "var(--ink-muted)" }}>Por que o funil vaza</div>
+          <div className="text-sm font-medium mb-4" style={{ color: "var(--ink)" }}>Por que o funil vaza</div>
           {motivosPerda.length === 0
             ? <div className="text-xs py-4 text-center" style={{ color: "var(--ink-faint)" }}>Nenhuma perda registrada ainda</div>
             : <div className="flex flex-col gap-3">{motivosPerda.map((m) => <BarraHorizontal key={m.label} label={m.label} valor={m.valor} total={m.total} cor="#E11D2E" />)}</div>}

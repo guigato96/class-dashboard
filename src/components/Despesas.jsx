@@ -51,16 +51,66 @@ const emptyDespesa = () => ({
   cartao: false,
 });
 
-function buildPayload(d) {
+const toNumber = (v) => (v === "" || v === null || v === undefined ? 0 : Number(v));
+
+// `valor` é o valor do mês que está sendo visto; `valor_base` é o valor padrão da recorrência.
+// Numa recorrente já existente, editar só o valor do mês não mexe no padrão (igual aos clientes).
+function buildPayload(d, isNew) {
   return {
     descricao: d.descricao || "",
     categoria: d.categoria || "Outros",
-    valor: d.valor === "" || d.valor === null || d.valor === undefined ? 0 : Number(d.valor),
+    valor: !isNew && d.recorrente && d.valor_base != null && d.valor_base !== "" ? toNumber(d.valor_base) : toNumber(d.valor),
     recorrente: !!d.recorrente,
     mes_final: d.recorrente ? d.mes_final || null : null,
     observacao: d.observacao || null,
     cartao: !!d.cartao,
   };
+}
+
+const NOVA_CATEGORIA = "__nova__";
+
+function CategoriaSelect({ value, onChange, opcoes, style }) {
+  const [criando, setCriando] = useState(false);
+  const [anterior, setAnterior] = useState(value);
+  const todas = !value || opcoes.includes(value) ? opcoes : [...opcoes, value];
+
+  if (criando) {
+    return (
+      <div className="flex gap-2">
+        <input
+          autoFocus
+          className={inputCls + " flex-1 min-w-0"}
+          style={style}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Nome da nova categoria"
+        />
+        <button
+          type="button"
+          onClick={() => { onChange(anterior); setCriando(false); }}
+          className="text-xs px-2.5 rounded-md shrink-0"
+          style={{ color: "var(--ink-muted)", border: "1px solid var(--border)" }}
+        >
+          Voltar
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <select
+      className={inputCls}
+      style={style}
+      value={value}
+      onChange={(e) => {
+        if (e.target.value === NOVA_CATEGORIA) { setAnterior(value); setCriando(true); onChange(""); }
+        else onChange(e.target.value);
+      }}
+    >
+      {todas.map((c) => <option key={c} value={c} style={{ backgroundColor: "var(--dropdown-bg)" }}>{c}</option>)}
+      <option value={NOVA_CATEGORIA} style={{ backgroundColor: "var(--dropdown-bg)" }}>＋ Nova categoria…</option>
+    </select>
+  );
 }
 
 function Field({ label, children }) {
@@ -98,7 +148,7 @@ function MonthNav({ mesRef, onChange }) {
   );
 }
 
-function DespesaForm({ despesa, onSave, onDelete, onCancel, isNew, salvando, mesLabel }) {
+function DespesaForm({ despesa, categorias, onSave, onDelete, onCancel, isNew, salvando, mesLabel }) {
   const [local, setLocal] = useState(despesa);
   useEffect(() => setLocal(despesa), [despesa.id]);
 
@@ -114,21 +164,14 @@ function DespesaForm({ despesa, onSave, onDelete, onCancel, isNew, salvando, mes
       </div>
 
       <Field label="Categoria">
-        <input
-          className={inputCls}
-          style={inputStyle}
-          list="categorias-sugeridas"
-          value={local.categoria}
-          onChange={(e) => set("categoria", e.target.value)}
-          placeholder="Ex: Curso, Ferramentas..."
-        />
-        <datalist id="categorias-sugeridas">
-          {CATEGORIAS_SUGERIDAS.map((c) => (
-            <option key={c} value={c} />
-          ))}
-        </datalist>
+        <CategoriaSelect value={local.categoria} onChange={(v) => set("categoria", v)} opcoes={categorias} style={inputStyle} />
       </Field>
-      <Field label={`Valor (${mesLabel})`}>
+      {!isNew && local.recorrente && (
+        <Field label="Valor padrão (meses seguintes)">
+          <input className={inputCls} style={inputStyle} type="number" value={local.valor_base ?? local.valor} onChange={(e) => set("valor_base", e.target.value)} placeholder="500" />
+        </Field>
+      )}
+      <Field label={!isNew && local.recorrente ? `Valor em ${mesLabel} (só este mês)` : `Valor (${mesLabel})`}>
         <input className={inputCls} style={inputStyle} type="number" value={local.valor} onChange={(e) => set("valor", e.target.value)} placeholder="500" />
       </Field>
       <Field label={`Status (${mesLabel})`}>
@@ -221,6 +264,51 @@ function DespesaForm({ despesa, onSave, onDelete, onCancel, isNew, salvando, mes
   );
 }
 
+function GastosPorCategoria({ despesas, mesLabel }) {
+  const total = despesas.reduce((sum, d) => sum + (Number(d.valor) || 0), 0);
+  const grupos = useMemo(() => {
+    const mapa = {};
+    despesas.forEach((d) => {
+      const g = mapa[d.categoria] || (mapa[d.categoria] = { categoria: d.categoria, valor: 0, qtd: 0 });
+      g.valor += Number(d.valor) || 0;
+      g.qtd += 1;
+    });
+    return Object.values(mapa).sort((a, b) => b.valor - a.valor);
+  }, [despesas]);
+
+  if (total <= 0) return null;
+  // Tons da mesma cor (do mais forte ao mais suave) — a posição no ranking liga a faixa ao cartão.
+  const tom = (i) => Math.max(0.14, 1 - i * 0.16);
+
+  return (
+    <div className="rounded-xl p-4 mb-6" style={{ backgroundColor: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+      <div className="flex items-baseline justify-between mb-3 gap-3">
+        <div className="text-sm font-medium" style={{ color: "var(--ink)" }}>Gastos por categoria · {mesLabel}</div>
+        <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{grupos.length} categoria{grupos.length === 1 ? "" : "s"} · {fmtMoney(total)}</div>
+      </div>
+
+      <div className="flex h-2.5 rounded-full overflow-hidden mb-4 gap-px" style={{ backgroundColor: "var(--track-bg)" }}>
+        {grupos.map((g, i) => (
+          <div key={g.categoria} title={`${g.categoria}: ${fmtMoney(g.valor)}`} style={{ width: `${(g.valor / total) * 100}%`, backgroundColor: "var(--ink)", opacity: tom(i) }} />
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+        {grupos.map((g, i) => (
+          <div key={g.categoria} className="rounded-lg p-3" style={{ border: "1px solid var(--card-border)", backgroundColor: "var(--card-bg-soft)" }}>
+            <div className="flex items-start gap-2 mb-1.5 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-sm shrink-0 mt-0.5" style={{ backgroundColor: "var(--ink)", opacity: tom(i) }} />
+              <span className="text-xs leading-tight break-words" style={{ color: "var(--ink-muted)" }}>{g.categoria}</span>
+            </div>
+            <div className="text-lg font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "var(--ink)" }}>{fmtMoney(g.valor)}</div>
+            <div className="text-xs" style={{ color: "var(--ink-faint)" }}>{Math.round((g.valor / total) * 100)}% · {g.qtd} despesa{g.qtd === 1 ? "" : "s"}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Despesas() {
   const [mesRef, setMesRef] = useState(mesAtualRef());
   const [despesas, setDespesas] = useState([]);
@@ -229,6 +317,7 @@ export default function Despesas() {
   const [expandedId, setExpandedId] = useState(null);
   const [novoAberto, setNovoAberto] = useState(false);
   const [erro, setErro] = useState("");
+  const [categoriasUsadas, setCategoriasUsadas] = useState([]);
 
   const mesLabel = labelMes(mesRef);
 
@@ -249,7 +338,8 @@ export default function Despesas() {
         return;
       }
 
-      const lista = despesasData || [];
+      const lista = (despesasData || []).map((d) => ({ ...d, categoria: categoriaLabel(d.categoria) }));
+      setCategoriasUsadas([...new Set(lista.map((d) => d.categoria))]);
 
       const { data: historicoData, error: historicoError } = await supabase
         .from("historico_despesas")
@@ -288,7 +378,7 @@ export default function Despesas() {
         .filter((d) => historicoMap.has(d.id))
         .map((d) => {
           const h = historicoMap.get(d.id);
-          return { ...d, valor: h.valor, pago: h.pago, cartao: !!d.cartao };
+          return { ...d, valor_base: d.valor, valor: h.valor, pago: h.pago, cartao: !!d.cartao };
         });
 
       setDespesas(comHistorico);
@@ -299,7 +389,8 @@ export default function Despesas() {
   const salvarDespesa = async (despesa, isNew) => {
     setSalvando(true);
     setErro("");
-    const payload = buildPayload(despesa);
+    const payload = buildPayload(despesa, isNew);
+    const valorMes = toNumber(despesa.valor);
     let despesaId = despesa.id;
 
     if (isNew) {
@@ -325,7 +416,7 @@ export default function Despesas() {
         {
           despesa_id: despesaId,
           mes_referencia: mesRef,
-          valor: payload.valor,
+          valor: valorMes,
           pago: !!despesa.pago,
           data_pagamento: despesa.pago ? new Date().toISOString().slice(0, 10) : null,
         },
@@ -338,7 +429,8 @@ export default function Despesas() {
       setErro("Despesa salva, mas houve erro ao registrar o lançamento do mês: " + historicoError.message);
     }
 
-    const despesaFinal = { ...payload, id: despesaId, valor: historico?.valor ?? payload.valor, pago: historico?.pago ?? !!despesa.pago };
+    const despesaFinal = { ...payload, id: despesaId, valor_base: payload.valor, valor: historico?.valor ?? valorMes, pago: historico?.pago ?? !!despesa.pago };
+    setCategoriasUsadas((prev) => (prev.includes(payload.categoria) ? prev : [...prev, payload.categoria]));
 
     setDespesas((prev) => {
       const existe = prev.some((d) => d.id === despesaId);
@@ -372,6 +464,18 @@ export default function Despesas() {
     }
   };
 
+  const alterarCategoria = async (despesa, nova) => {
+    const anterior = despesa.categoria;
+    if (!nova || nova === anterior) return;
+    setErro("");
+    setDespesas((prev) => prev.map((d) => (d.id === despesa.id ? { ...d, categoria: nova } : d)));
+    const { error } = await supabase.from("despesas").update({ categoria: nova }).eq("id", despesa.id);
+    if (error) {
+      setErro("Erro ao mudar categoria: " + error.message);
+      setDespesas((prev) => prev.map((d) => (d.id === despesa.id ? { ...d, categoria: anterior } : d)));
+    }
+  };
+
   const removerDespesa = async (id) => {
     setSalvando(true);
     setErro("");
@@ -391,6 +495,11 @@ export default function Despesas() {
   const pendentes = despesas.filter((d) => !d.pago).length;
   const recorrentes = despesas.filter((d) => d.recorrente).length;
   const totalCartao = useMemo(() => despesas.filter((d) => d.cartao).reduce((sum, d) => sum + (Number(d.valor) || 0), 0), [despesas]);
+
+  const opcoesCategoria = useMemo(() => {
+    const extras = categoriasUsadas.filter((c) => !CATEGORIAS_SUGERIDAS.includes(c)).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    return [...CATEGORIAS_SUGERIDAS, ...extras];
+  }, [categoriasUsadas]);
 
   const ordenadas = useMemo(() => [...despesas].sort((a, b) => (a.descricao || "").localeCompare(b.descricao || "", "pt-BR")), [despesas]);
 
@@ -427,10 +536,12 @@ export default function Despesas() {
             <StatCard label="Recorrentes ativas" value={recorrentes} icon={Repeat} />
           </div>
 
+          <GastosPorCategoria despesas={despesas} mesLabel={mesLabel} />
+
           {novoAberto && (
             <div className="mb-4 rounded-xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
               <div className="px-5 py-3 text-sm font-medium" style={{ backgroundColor: "var(--header-bg)", color: "var(--ink)", borderBottom: `1px solid ${PURPLE}33` }}>Nova despesa</div>
-              <DespesaForm despesa={emptyDespesa()} onSave={salvarDespesa} onCancel={() => setNovoAberto(false)} onDelete={() => {}} isNew salvando={salvando} mesLabel={mesLabel} />
+              <DespesaForm despesa={emptyDespesa()} categorias={opcoesCategoria} onSave={salvarDespesa} onCancel={() => setNovoAberto(false)} onDelete={() => {}} isNew salvando={salvando} mesLabel={mesLabel} />
             </div>
           )}
 
@@ -461,7 +572,24 @@ export default function Despesas() {
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: corStatus }} />
                       <div>
                         <div className="text-sm font-semibold" style={{ color: "var(--ink)" }}>{d.descricao || "Sem descrição"}</div>
-                        <div className="text-xs" style={{ color: "var(--ink-muted)" }}>{categoriaLabel(d.categoria)} · {fmtMoney(d.valor)}</div>
+                        <div className="text-xs flex items-center gap-1.5 flex-wrap" style={{ color: "var(--ink-muted)" }}>
+                          <select
+                            value={d.categoria}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => alterarCategoria(d, e.target.value)}
+                            title="Mudar categoria"
+                            className="text-xs rounded-md px-1.5 py-0.5 outline-none cursor-pointer"
+                            style={{ backgroundColor: "var(--subtle-bg)", color: "var(--ink-muted)", border: "1px solid var(--border)" }}
+                          >
+                            {(opcoesCategoria.includes(d.categoria) ? opcoesCategoria : [...opcoesCategoria, d.categoria]).map((c) => (
+                              <option key={c} value={c} style={{ backgroundColor: "var(--dropdown-bg)", color: "var(--ink)" }}>{c}</option>
+                            ))}
+                          </select>
+                          <span>· {fmtMoney(d.valor)}</span>
+                          {d.recorrente && d.valor_base != null && Number(d.valor_base) !== Number(d.valor) && (
+                            <span title={`Valor padrão: ${fmtMoney(d.valor_base)}`} style={{ color: "#EAB308" }}>· ajustado neste mês</span>
+                          )}
+                        </div>
                       </div>
                       {d.recorrente && (
                         <span className="inline-flex items-center gap-1 text-xs" style={{ color: "var(--ink-muted)" }}>
@@ -488,7 +616,7 @@ export default function Despesas() {
                     </div>
                   </div>
                   {aberto && (
-                    <DespesaForm despesa={d} onSave={salvarDespesa} onCancel={() => setExpandedId(null)} onDelete={removerDespesa} salvando={salvando} mesLabel={mesLabel} />
+                    <DespesaForm despesa={d} categorias={opcoesCategoria} onSave={salvarDespesa} onCancel={() => setExpandedId(null)} onDelete={removerDespesa} salvando={salvando} mesLabel={mesLabel} />
                   )}
                 </div>
               );
